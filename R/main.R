@@ -55,7 +55,7 @@ rubitMain <- function(FILE, scale = 1, adj_fps = NA, hz = 30, start_at = NA, end
 	#load raw file
 	l <- rubitLoadFile(FILE)
 	#original attributes
-	atrs <- attributes(l)  
+	atrs <- attributes(l)
 
 	#lens correction
 	imWidth <- as.numeric(attributes(l)$Width)

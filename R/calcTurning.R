@@ -73,5 +73,5 @@ rubitCalcTurning <- function(m, resample = 1) {
 		attributes(mm)$tags.isResampled <- TRUE
 	}
 
-	m
+	mm
 }

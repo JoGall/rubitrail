@@ -30,7 +30,7 @@ NULL
 #' @param a,b,c parameters to correct lens distortion. See \code{\link{lensCorrection}} for more information.
 #' @param filterFUN the filter function to be used. It must have the same arguments as \code{\link{rubitMedianFilter}}.
 #' @param interpFUN the interpolation function to be used. It must have the same arguments as \code{\link{rubitLinearInterpolate}}.
-#' @param verbose a boolean. If TRUE, the function will print messages at every step.
+#' @param verbose logical; if TRUE, the function will print messages at every step.
 #' @note The returned list contains a numerical matrix for each area. The attributes of list contain metadata and additional information is present in each of the attributes of each matrix.
 #' Re-encoding a new framerate with \code{adj_fps} can correct potential errors made during video recording and/or tracking analysis. Check that the value returned by \code{\link{calcFPS}} matches the calculated framerate of the original video (e.g. using the 'ffprobe' function in FFmpeg [\url{https://ffmpeg.org/}].
 #' @return A list of numerical matrices. Each matrix corresponds to an area.
