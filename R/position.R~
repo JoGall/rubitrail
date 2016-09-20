@@ -1,0 +1,90 @@
+#' @include main.R
+#' @include utils.R
+NULL
+#' Calculate positional information (e.g. thigmotaxis, exploration) from a circular area
+#'
+#' Divides a circular area into a user-defined number of grid cells of equal size to quantify exploration (number of unique grid cells visited per unit time), and divides a circular area into an inner and outer ring to quantify thigmotaxis (movement in the perimeter of the area).
+#'
+#' @param df a dataframe containing processed tracking data outputted by \code{\link{rubitReadToDF}}
+#' @param n_radials the number of concentric circles to divide a circular arena into
+#' @param n_slices the number of slices to divide a circular arena into
+#' @param thigmo_dist the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis), in mm. If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > R/sqrt(2) from the area centre, where R is the radius of the area).
+#' @param n_bootstraps the number of random data samples used to calculate the minimum enclosing circle defining each circular area.
+#' @param verbose a boolean indicating if step-by-step information on processing is to be provided.
+#' @note TODO
+#' @return The inputted dataframe with positional information added for each area and for each timepoint
+#' @examples
+#' \dontrun{
+#' dat <- rubitReadToDF(tenebrio.rda)[[1]]
+#' dat2 <- rubitInterpolTime(dat, 0, 60)
+#' dat3 <- rubitSpeed(dat2, windowSize = 1)
+#'
+#' ### Area divided into 96 cell of equal area, and 
+#' ### thigmotaxis defined when object is <2cm from
+#' ### perimeter of the area
+#' dat4 <- rubitPosition(dat3, 8, 12, thigmo_dist = 20)
+#'
+#' }
+#' @seealso \code{\link{rubitMain}} to understand the different steps of processing, and \code{\link{rubitPlotPosition}} to visualise positional information.
+#' @export
+rubitPosition <- function(df, n_radials = 1, n_slices = 1, thigmo_dist = NA, n_bootstraps = 20, verbose = FALSE) {
+
+	#create empty storage
+	global_df <- data.frame()
+	
+	#make progress bar
+	if(verbose){
+		tmp <- 1
+		pb <- txtProgressBar(min = 0, max = length(unique(df$id)), style = 3)
+	}
+	
+	##filelist loop
+	for(i in unique(df$id)) {
+		#subset
+		ss <- subset(df, id == i)
+		
+		##exploration
+		#find minimum enclosing circle
+		radials <- getRadials(ss$X, ss$Y, n_radials, n_bootstraps)
+		#convert cartesian to polar
+		polarCoords <- getPolarCoords(ss$X, ss$Y, radials$midX[1], radials$midY[1])
+		#conform x,y-coordinates to fit inside area dimensions
+		polarCoords$rad <- ifelse(polarCoords$rad > max(radials$rad), max(radials$rad), polarCoords$rad)
+		#convert back to cartesian coordinates
+		newXY <- polar2cart(polarCoords$rad, polarCoords$theta, radials$midX[1], radials$midY[1])
+		ss$X <- newXY$X
+		ss$Y <- newXY$Y
+		
+		#calculate cell ID for each x,y point
+		cellID <- getCellID(polarCoords, radials, n_slices)
+	
+		##thigmotaxis
+		#calculate inner and outer circle radii
+		outer_r <- radials[n_radials,]$rad
+		ifelse(is.na(thigmo_dist), inner_r <- outer_r / sqrt(2), inner_r <- outer_r - thigmo_dist)
+#		#scale area perimeters: may be required for area information 
+#		#derived from image mask
+#		area_scalar <- 0.93
+#		outer_r <- outer_r * area_scalar
+#		inner_r <- outer_r / sqrt(2)
+
+		#continuous metric: distance from perimeter
+		dist_from_mid <- sqrt((radials[n_radials,]$midX - ss$X)^2 + (radials[n_radials,]$midY - ss$Y)^2)
+		#discrete metric: central or perimeter
+		position <- ifelse(dist_from_mid > inner_r, "OUTSIDE", "INSIDE")
+		
+		##output
+		ss_df <- data.frame(ss, cell = cellID$cell, perimeter_dist = outer_r - dist_from_mid, position)
+		global_df <- rbind(global_df, ss_df)
+	
+		# update progress bar
+		if(verbose){
+			Sys.sleep(0.1)
+			setTxtProgressBar(pb, tmp)
+			tmp <- tmp+1
+		}
+	}
+	if(verbose) close(pb)
+	
+	return(global_df)
+}

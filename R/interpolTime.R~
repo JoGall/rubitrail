@@ -1,0 +1,86 @@
+#' @include main.R
+NULL
+#' Trims and/or interpolates tracking data to fit within desired start and endpoints.
+#'
+#' X,Y-positions are defined as NA for timepoints before initial object detection, and are repeated as the last known location for all interpolated timepoints thereafter.
+#'
+#' @param df a dataframe containing processed tracking data outputted by \code{\link{rubitReadToDF}}.
+#' @param start_time the start time to interpolate / cut tracking data from, in minutes.
+#' @param end_time the end time to interpolate / cut tracking data to, in minutes.
+#' @param verbose a boolean indicating if step-by-step information on processing is to be provided.
+#' @note TODO
+#' @return The inputted dataframe with interpolated timepoints added and/or trimmed timepoints removed
+#' @examples
+#' \dontrun{
+#' dat <- rubitReadToDF(tenebrio.rda)[[1]]
+#'
+#' ### Interpolate data for the time period 0 - 60 minutes
+#' dat2 <- rubitInterpolTime(dat, 0, 60)
+#'
+#' ### Cut data to select only timepoints between 20 - 40 minutes
+#' dat2 <- rubitInterpolTime(dat, 20, 40)
+#'
+#' }
+#' @seealso \code{\link{rubitMain}} to understand the different steps of processing.
+#' @export
+rubitInterpolTime <- function(df, start_time, end_time, verbose = FALSE) {
+	#adjust start and end times to ms
+	start_time <- start_time*60*1000
+	end_time <- end_time*60*1000
+	#calculate interval time
+	itv <- mean(tapply(df$time, df$id, function(x) median(diff(x))))
+	#trim dataframe
+	df <- subset(df, time >= start_time & time <= end_time)
+	#create empty storage
+	global_df <- matrix(numeric(0), ncol = 9)
+	
+	#make progress bar
+	if(verbose){
+		tmp <- 1
+		pb <- txtProgressBar(min = 0, max = length(unique(df$id)), style = 3)	
+	}
+	
+	##loop
+	for(i in unique(df$id)){
+		ss <- subset(df, id == i)
+		
+		#build new time intervals from specified start until first read
+		int_times_start <- numeric(0)
+		if(start_time < min(ss$time)){
+			int_times_start <- seq(start_time, min(ss$time), itv)
+		}	
+		#build new time intervals from last read until specified end
+		int_times_end <- numeric(0)
+		if(end_time > max(ss$time)){
+			int_times_end <- seq(max(ss$time), end_time, itv)
+			ss$Distance <- c(ss$Distance[1:(length(ss$Distance)-2)], 0, 0)
+			Distance <- c(rep(0, length(int_times_start)), ss$Distance, rep(0, length(int_times_end)) )
+		} else {
+			Distance <- c(rep(0, length(int_times_start)), ss$Distance)
+		}
+		
+		#assemble zero arrays for x,y coordinate and distance during interpolated frames
+		time <- c(int_times_start, ss$time, int_times_end)
+		X <- c(rep(NA, length(int_times_start)), ss$X, rep(ss[length(ss$X),]$X, length(int_times_end)) )
+		Y <- c(rep(NA, length(int_times_start)), ss$Y, rep(ss[length(ss$Y),]$Y, length(int_times_end)) )
+		
+		#rebuild tags
+		filename <- rep(as.numeric(as.character(ss$filename[1])), length(time))
+		area <- rep(as.character(ss$area[1]), length(time))
+		id <- rep(as.integer(unique(ss$id)), length(time))
+		
+		#assemble new dataframe
+		ss_df <- data.frame(id, filename, area, X, Y, Distance, time)
+		global_df <- rbind(global_df, ss_df)	
+
+		# update progress bar
+		if(verbose){
+			Sys.sleep(0.1)
+			setTxtProgressBar(pb, tmp)
+			tmp <- tmp+1
+		}
+	}
+	if(verbose) close(pb)
+	
+	return(global_df)
+}

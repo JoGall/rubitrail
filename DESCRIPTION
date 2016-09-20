@@ -1,0 +1,44 @@
+Package: rubitrail
+Version: 2.0.1
+Date: 2016-09-20
+Authors@R: c(
+	person("Quentin", "Geissmann", , "qgeissmann@gmail.com", c("aut", "cre")),
+	person("Joe", "Gallagher", , "joedgallagher@gmail.com", "aut")
+	)
+Maintainer: Joe Gallagher <joedgallagher@gmail.com>
+Title: rubitrail, a package to analyse the output of UbiTrail, an open-source
+    video tracking program for analysis of animal locomotion.
+Description: This package provides tools to read, analyse and represent output
+    data from UbiTrail. Used in combination, UbiTrail and rubitrail provide a
+    complete toolkit to quantify single animal motion in arenas. Please visit
+    the website for complete documentation and tutorials.
+Depends:
+    R (>= 2.15.0)
+Imports:
+    MASS,
+    shotGroups,
+    plotrix
+Suggests:
+    rtiff
+LazyLoad: TRUE
+License: GPL (>=3.0)
+URL: http://ubitrail.sourceforge.net/
+Collate:
+    'utils.R'
+    'linearInterpolate.R'
+    'medianFilter.R'
+    'removeOutliers.R'
+    'calcTurning.R'
+    'calcSpeed.R'
+    'calcPosition.R'
+    'calcFPS.R'
+    'calcActivity.R'
+    'main.R'
+    'loadFile.R'
+    'basic.R'
+    'convertToDF.R'
+    'lensCorrection.R'
+    'plotHeatmap.R'
+    'plotPosition.R'
+    'tenebrio-data.R'
+    'weevils-data.R'

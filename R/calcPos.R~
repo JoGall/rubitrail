@@ -1,0 +1,127 @@
+#' @include rubitMain.R
+#' @include utils.R
+#' Calculate positional information (e.g. thigmotaxis, exploration) from a circular area
+#'
+#' Divides a circular area into a user-defined number of grid cells of equal size to quantify exploration (number of unique grid cells visited per unit time), and divides a circular area into an inner and outer ring to quantify thigmotaxis (movement in the perimeter of the area).
+#'
+#' @param df a dataframe containing processed tracking data outputted by \code{\link{rubitReadRaw}}
+#' @param n_radials the number of concentric circles to divide a circular arena into
+#' @param n_slices the number of slices to divide a circular arena into
+#' @param thigDistance the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis), in mm. If thigDistance = NA, thigmotaxis is defined as movement in the outer 50% of the area (i.e. > R/sqrt(2) from the area centre, where R is the radius of the area).
+#' @param n_bootstraps the number of random data samples used to calculate the minimum enclosing circle defining each circular area.
+#' @note TODO
+#' @return an updated dataframe containing positional information
+#' @examples
+#' \dontrun{
+#' dat <- rubitReadRaw(tenebrio.rda)[[1]]
+#' dat2 <- rubitInterpolTime(dat, 0, 60)
+#' dat3 <- calcSpeed(dat2, windowSize = 1)
+#' ### Area divided into 96 cell of equal area; thigmotaxis defined when object is <2cm from the perimeter of the area
+#' dat4 <- rubitPosition(dat3, 8, 12, thigDistance = 20)
+#' }
+#' @seealso \code{\link{rubitMain}} to understand the different steps of processing, and \code{\link{rubitPlotPos}} to visualise positional information.
+#' @export
+rubitPos <- function(df, n_radials, n_slices, thigDistance = NA, n_bootstraps = 20) {
+	#create empty storage
+	global_df <- data.frame()
+	
+	#make progress bar
+	tmp <- 1
+	pb <- txtProgressBar(dfin = 0, max = length(unique(df$id)), style = 3)
+	
+	##filelist loop
+	for(i in unique(df$id)) {
+		#subset
+		ss <- subset(df, id == i)
+		
+		##exploration
+		#find minimum enclosing circle
+		radials <- getRadials(ss$smoothX, ss$smoothY, n_radials, n_bootstraps)
+		#convert cartesian to polar
+		polarCoords <- getPolarCoords(ss$smoothX, ss$smoothY, radials$midX[1], radials$midY[1])
+		#calculate cell ID for each x,y point
+		cellID <- getCellID(polarCoords, radials, n_slices)
+	
+		##thigmotaxis
+		#calculate inner and outer circle radii
+		outer_r <- radials[n_radials,]$rad
+		ifelse(is.na(thigDistance), inner_r <- outer_r / sqrt(2), inner_r <- outer_r - thigDistance)
+#		#scale area perimeters, if necessary
+#		area_scalar <- 0.93
+#		outer_r <- outer_r * area_scalar
+#		inner_r <- outer_r / sqrt(2)
+		#continuous metric: distance from perimeter
+		dist_from_mid <- sqrt((radials[n_radials,]$midX - ss$smoothX)^2 + (radials[n_radials,]$midY - ss$smoothY)^2)
+		#discrete metric: central or perimeter
+		position <- ifelse(dist_from_mid > inner_r, "OUTSIDE", "INSIDE")
+		
+		##output
+		ss_df <- data.frame(ss, cell = cellID$cell, perimeter_distance = outer_r - dist_from_mid, position)
+		global_df <- rbind(global_df, ss_df)
+	
+		## update progress bar
+		Sys.sleep(0.1)
+		setTxtProgressBar(pb, tmp)
+		tmp <- tmp+1
+	}
+	close(pb)
+	
+	return(global_df)
+}
+#' @include rubitMain.R
+#' @include utils.R
+#' Calculate positional information (e.g. thigmotaxis, exploration) from a circular area
+#'
+#' Divides a circular area into a user-defined number of grid cells of equal size to quantify exploration (number of unique grid cells visited per unit time), and divides a circular area into an inner and outer ring to quantify thigmotaxis (movement in the perimeter of the area).
+#'
+#' @param df a dataframe containing processed tracking data outputted by \code{\link{rubitReadRaw}}
+#' @param n_radials the number of concentric circles to divide a circular arena into
+#' @param n_slices the number of slices to divide a circular arena into
+#' @param thigDistance the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis), in mm. If thigDistance = NA, thigmotaxis is defined as movement in the outer 50% of the area (i.e. > R/sqrt(2) from the area centre, where R is the radius of the area).
+#' @param n_bootstraps the number of random data samples used to calculate the minimum enclosing circle defining each circular area.
+#' @note TODO
+#' @return a plot of the divided area with animal trajectory overlaid
+#' @examples
+#' \dontrun{
+#' dat <- rubitReadRaw(tenebrio.rda)[[1]]
+#' dat2 <- rubitInterpolateTime(dat, 0, 60)
+#' dat3 <- calcSpeed(dat2, windowSize = 1)
+#' ### Area divided into 96 cell of equal area; thigmotaxis defined when object is <2cm from the perimeter of the area
+#' plotPos(dat3, 12, 8)
+#' }
+#' @seealso \code{\link{rubitPos}} for more on calculating positional information.
+#' @export
+rubitPlotPos <- function(data, n_radials, n_slices) {
+	#calculate radials
+	radials <- getRadials(data$smoothX, data$smoothY, n_radials)
+	#convert X,Y Cartesian coordinates to polar
+	polarCoords <- getPolarCoords(data$smoothX, data$smoothY, radials$midX[1], radials$midY[1])
+	#adjust arena size if all points not contained within
+	if(dfax(polarCoords$rad, na.rm=T) > max(radials$rad, na.rm=T)) {
+		alpha <- max(polarCoords$rad, na.rm=T) / max(radials$rad, na.rm=T)
+		radials$rad <- radials$rad * alpha
+	}
+	#get slice coordinates
+	slices <- getSlices(n_slices, radials)
+
+	#plot
+	plot(data$smoothX, data$smoothY, type='n', asp=1, xlab="X", ylab="Y")
+	#draw radials
+	for(i in 1:nrow(radials)){
+		draw.circle(radials$midX[i], radials$midY[i], radials$rad[i], border="gray75", lwd=2)
+	}
+	#draw slices
+	for(i in 1:nrow(slices)){
+		segments(radials$midX[1], radials$midY[1], slices$x[i], slices$y[i], col="gray75", lwd=2)
+	}
+	#draw thigmotaxis line
+	outer_r <- radials[n_radials,]$rad
+	ifelse(is.na(thigDistance), inner_r <- outer_r / sqrt(2), inner_r <- outer_r - thigDistance)
+	draw.circle(radials$midX[i], radials$midY[i], inner_r, border="red", lwd=2)
+	#add complete trajectory
+	points(data[,"smoothX"], data[,"smoothY"], type='l')
+	
+#	#plot random points
+#	ss_point <- data.frame(X, Y)[sample(1:length(X), 1),]
+#	points(ss_point, col="red", pch=19, cex=1.5)
+}

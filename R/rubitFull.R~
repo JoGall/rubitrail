@@ -1,0 +1,146 @@
+## REQUIRE
+##==========
+
+require(rubitrail)
+require(zoo)
+require(shotGroups)
+require(plotrix)
+
+source("/media/storage/Copy/github/rubitrail/v2.0/R/readRaw.R")
+source("/media/storage/Copy/github/rubitrail/v2.0/R/intTime.R")
+source("/media/storage/Copy/github/rubitrail/v2.0/R/calcSpeed.R")
+source("/media/storage/Copy/github/rubitrail/v2.0/R/calcRuns.R")
+source("/media/storage/Copy/github/rubitrail/v2.0/R/calcTurns.R")
+source("/media/storage/Copy/github/rubitrail/v2.0/R/calcPos.R")
+
+## FUNCTIONS
+##===========
+
+## main function
+
+rubitrailFull <- function(filelist, ADJ_FPS = 0, PXMM = 191/92, UNDISTORT_A = 0, UNDISTORT_B = -0.022, UNDISTORT_C = 0, UNDISTORT_D = 1, START_TIME = 0, END_TIME = 60, LOWER_SPEED_THRESH = 0.1, UPPER_SPEED_THRESH = 30, SPEED_WINDOW_SIZE = 3, GRID_RADIALS = 8, GRID_SLICES = 12, THIG_DISTANCE = 0, TURN_RESAMPLE_RATE = 1, RLE_DURATION = 3, RLE_MIN_SPEED = 0.1, N_CELLS = 96, RETURN_DATA = FALSE, CALC_STATS = TRUE, RETURN_NA = TRUE, TS_BINS = 6) {
+#----------------------------------------------------------------
+# Meta-function which extracts features from a list of raw UbiTrail datafiles and returns summary statistics for each object
+# By default, returns a list containing:
+# [[1]] overall summary statistics,
+# [[2]] time series binned statistics,
+# [[3]] undetected object information
+#----------------------------------------------------------------
+# RETURN_DATA = returns a list of dataframes containing unsummarised data:
+#		[[1]] speed and positional data
+#		[[2]] turning angle data
+#		[[3]] run length encoded data
+# CALC_STATS = returns dataframes of summarised statistics
+# RETURN_NA_LIST = option to return information of objects that went undetected (no movement / unknown errors)
+#----------------------------------------------------------------
+
+	#create empty storage
+	stats <- matrix(numeric(0), ncol=48)
+	TS_stats <- matrix(numeric(0), ncol=263)
+	
+#	FPS <- calcFPS(filelist)
+	
+	#initialisation
+	if(RETURN_DATA == FALSE & CALC_STATS == FALSE & RETURN_NA == FALSE) message("\nWARNING! Nothing requested to be returned from function")
+	message("\nAnalysing ", length(filelist), " files")
+	message("Estimated time to analyse: ", as.integer(length(filelist)*120/60), " minutes")
+	
+	#read data and correct lens distortion
+	message("\n1/7: Reading raw data...")
+	rawread <- readRaw(filelist, adj_fps = ADJ_FPS, pxmm = PXMM, undistort_a = UNDISTORT_A, undistort_b = UNDISTORT_B, undistort_c = UNDISTORT_C, undistort_d = UNDISTORT_D)
+	tempdata <- rawread[[1]]
+	NA_list <- rawread[[3]]
+	
+	#interpolate missing times
+	message("\n2/7: Interpolating time...")
+	tempdata <- intTime(tempdata, start_time = START_TIME, end_time = END_TIME)
+	
+	#smooth positions and calculate speed
+	message("\n3/7: Smoothing X,Y-coords and calculating speed...")
+	full_data <- calcSpeed(tempdata, lower_thresh = LOWER_SPEED_THRESH, upper_thresh = UPPER_SPEED_THRESH, windowSize = SPEED_WINDOW_SIZE)
+	
+	#calculate positional information
+	message("\n4/7: Quantifying thigmotaxis and exploration...")
+	tempdata <- calcPos(full_data, GRID_RADIALS, GRID_SLICES, THIG_DISTANCE)
+	
+	#calculate turning angle
+	message("\n5/7: Calculating turning angles...")
+	turns <- calcTurns(tempdata, resampleRate = TURN_RESAMPLE_RATE)
+	
+	#run length encoding
+	message("\n6/7: Calculating mobility status...")
+	runs <- calcRuns(tempdata, thresholdDuration = RLE_DURATION, minSpeed = RLE_MIN_SPEED)
+	
+	#calculate statistics and return data
+	if(RETURN_DATA == TRUE){
+		if(CALC_STATS == FALSE){
+			message("\n7/7: Returning dataframes...")
+			if(RETURN_NA == TRUE) return(list(full_data, tempdata, turns, runs, NA_list)) else return(list(full_data, tempdata, turns, runs))
+		}
+		if(CALC_STATS == TRUE) {
+			message("\n7/7: Calculating statistics...")
+			summary_stats <- calcStatsOverall(tempdata, turns, runs, THRESH = RLE_MIN_SPEED)
+			suppressWarnings(TS_stats <- calcStatsTS(tempdata, turns, runs, THRESH = RLE_MIN_SPEED, N_BINS = TS_BINS))
+			if(RETURN_NA == TRUE) return(list(full_data, tempdata, turns, runs, summary_stats, TS_stats, NA_list)) else return(list(full_data, tempdata, turns, runs, summary_stats, TS_stats))
+		}
+	}
+	
+	#just calculate statistics
+	if(RETURN_DATA == FALSE){
+		if(CALC_STATS == FALSE & RETURN_NA == TRUE) {
+			return(NA_list)
+		}
+		if(CALC_STATS == TRUE) {
+			message("\n7/7: Calculating statistics...")
+			summary_stats <- calcStatsOverall(tempdata, turns, runs, THRESH = RLE_MIN_SPEED)
+			suppressWarnings(TS_stats <- calcStatsTS(tempdata, turns, runs, THRESH = RLE_MIN_SPEED, N_BINS = TS_BINS))
+			if(RETURN_NA == TRUE) return(list(summary_stats, TS_stats, NA_list)) else return(list(summary_stats, TS_stats))
+		}
+	}
+	
+}
+
+
+## helper functions
+
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+calcFPS <- function(m) {
+	itv_list <- tapply(m$time, m$id, function(x) median(diff(x)))
+	itv <- median(itv_list)
+	fps <- 1000 / itv
+	return(fps)
+}
+
+add_long_variable <- function(m, var_data, new_var_name) {
+	
+	#extend short vector of variables to fit full data
+	rep_times <- rle(m$id)$lengths
+	new_var <- rep(var_data, times=rep_times)
+	
+	#append to data
+	m$new_var <- new_var
+	names(m)[ncol(m)] <- new_var_name
+	
+	return(m)
+}
+
+## FUNCTION DEFAULTS
+##==================
+
+#PXMM <- 191/92
+#ADJ_FPS = 19.05
+#START_TIME = 0
+#END_TIME = 60
+#LOWER_SPEED_THRESH = 0.1
+#UPPER_SPEED_THRESH = 30
+#SPEED_WINDOW_SIZE = 3
+#TURN_RESAMPLE_RATE = 1
+#RLE_DURATION = 1
+#RLE_MIN_SPEED = 0.1
+#TS_BINS = 6
+
+#undistort parameters: a = 0, b = -0.022, c = 0

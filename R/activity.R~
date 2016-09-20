@@ -1,0 +1,93 @@
+#' @include main.R
+NULL
+#' Calculates duration and number of mobile / stationary phases
+#'
+#' Defines stationary and mobile phases by determining the number of consecutive timepoints in which movement speeds are below (stationary; FALSE) or above (mobile; TRUE) the defined threshold speed. The window size defines the number of consecutive timepoints required to change the activity phase, in seconds.
+#'
+#' @param df a dataframe containing processed tracking data outputted by \code{\link{rubitReadToDF}}
+#' @param window the window size used to define changes in activity, in seconds.
+#' @param min_speed the minimum speed threshold used to define changes in activity, below which no movement is assumed, in mm/second.
+#' @param verbose a boolean indicating if step-by-step information on processing is to be provided.
+#' @note TODO
+#' @return a separate dataframe containing run length encoded data on activity
+#' @examples
+#' \dontrun{
+#' dat <- rubitReadToDF(tenebrio.rda)[[1]]
+#' dat2 <- rubitInterpolateTime(dat, 0, 60)
+#' dat3 <- rubitSpeed(dat2, windowSize = 1)
+#' dat4 <- rubitActivity(dat3)
+#'
+#' }
+#' @seealso \code{\link{rubitMain}} to understand the different steps of processing.
+#' @export
+rubitActivity <- function(df, window = 1, min_speed = 0.1, verbose = FALSE) {
+
+	#change threshold duration from seconds to frames
+	window <- window * calcFPS(df)
+
+	#create empty storage
+	global_df <- matrix(numeric(), ncol=9)
+
+	#make progress bar
+	if(verbose){
+		tmp <- 1
+		pb <- txtProgressBar(min = 0, max = length(unique(df$id)), style = 3)
+	}
+	
+	#file loop
+	for(i in unique(df$id)) {
+		#calculate raw RLE
+		speeds <- subset(df, df$id == i)
+		speeds$smoothSpeed[is.na(speeds$smoothSpeed)] <- 0
+		raw <- rle(speeds$smoothSpeed >= min_speed)
+		raw_df <- data.frame(id = rep(i, length(raw$values)), run = raw$lengths, values = raw$values)
+
+		#smooth raw RLE
+		if(nrow(raw_df) > 1 ) {
+			for(j in 2:length(raw_df$run)){
+				if(raw_df$run[j] < window ){
+					raw_df$values[j] <- raw_df$values[j-1]
+				}
+			}
+		}
+		rle_rle <- rle(raw_df$values == TRUE)
+		clusters <- rep(1:length(rle_rle$lengths), rle_rle$lengths)
+		comb <- data.frame(raw_df, clusters)
+		agg <- aggregate(x = comb$run, by = list(comb$values, comb$clusters), FUN = "sum")
+		smooth_df <- data.frame(id = rep(unique(raw_df$id),nrow(agg)), run = agg[,3], values = agg[,1])
+
+		#extract features from RLE
+		cum <- 0
+		for(j in 1:length(smooth_df$run)){
+			#subset each phase
+			ss <- speeds[(cum+1):(cum+smooth_df$run[j]),]
+			#make variables
+			id <- unique(ss$id)
+			run <- smooth_df$run[j]
+			values <- smooth_df$values[j]
+			time_start <- ss$time[1]
+			time_end <- ss$time[nrow(ss)]
+			duration <- time_end - time_start
+			mean_speed <- mean(ss$smoothSpeed)
+			var_speed <- var(ss$smoothSpeed)
+			cum_Distance <- max(cumsum(ss$smoothDistance))
+			modal_position <- Mode(ss$position)
+			
+			#append to global dataframe
+			ss_df <- data.frame(id, run, values, speedMean = mean_speed, speedVar = var_speed, DistanceTotal = cum_Distance, position = modal_position, start = time_start, end = time_end, duration)
+			global_df <- rbind(global_df, ss_df)
+
+			cum <- cum + smooth_df$run[j]
+		}
+		
+		# update progress bar
+		if(verbose){
+			Sys.sleep(0.1)
+			setTxtProgressBar(pb, tmp)
+			tmp <- tmp+1
+		}
+	}
+	if(verbose) close(pb)
+
+	return(global_df)
+}

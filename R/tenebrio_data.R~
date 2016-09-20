@@ -1,0 +1,8 @@
+#' @name tenebrio_data.rda
+#' @title raw tracking data from six Tenebrio molitor
+#' @description This data contains the raw tracking data outputted by UbiTrail on Tenebrio molitor adults in six circular areas
+#' @docType data
+#' @usage tenebrio_data
+#' @format TODO
+#' @source TODO
+#' @author Joe Gallagher, 2014

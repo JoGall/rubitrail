@@ -1,0 +1,115 @@
+rubitLoadFile <- function(FILE,verbose=FALSE){
+	if(verbose) print("Reading data...")#Reading data from result file
+	meta <- rubitMetaData(FILE)
+	data <- rubitData(FILE)
+	if(verbose) print("Formating data...")#Formatting data to a list of matrix and setting attributes
+	l <- rubitParseDataToList(data,meta)
+	if(verbose) print("Converting data to absole data...") #Conversion to absolute data
+	
+	#To preserve the attributes of l:
+	atrs <- attributes(l);
+	l <- lapply(l,h_rubitRelativeToAbsolute, HG = as.numeric(attributes(l)[['Height']]) )
+	attributes(l) <- atrs
+	
+	l
+}
+
+rubitMetaData <- function(FILE, verbose=FALSE){
+    e <- scan(FILE, what='character', nlines=1, quiet=!verbose)
+    meta <- eval(parse(text=e))
+    
+    H <- as.numeric(meta$Global['Height']) 
+    meta$Areas['Y',] <- (H - meta$Areas['Y',]) - meta$Areas['H',]
+    return(meta)
+}
+	
+rubitData <- function(FILE, verbose=FALSE){
+    n <- scan(FILE, what='character', skip=1,sep=',', nlines=1, quiet=!verbose)
+    a <- scan(FILE, skip=2, sep=',', quiet=!verbose)
+    nc <- length(n)
+    nr <- length(a)/nc
+    m_ <- matrix(a,nr,nc,byrow=T)
+    colnames(m_) <- n
+    m_[,'Y'] <- 1 - m_[,'Y']
+    m_
+}
+
+rubitParseDataToList <- function(data, meta){
+	Global <- meta$Global
+	Areas <- meta$Areas
+	l <- lapply(colnames(Areas),h_rubitSetAttributes,m=data,areas = Areas)
+	names(l) <- colnames(meta$Areas)
+    attributes(l) <- c(attributes(l),as.list(Global))
+    l
+}
+
+h_rubitSetAttributes <- function(i, m, areas) {
+	mm <- m[m[,'Area']==as.numeric(i),-c(which(colnames(m) == 'Area'))]
+	tag <- list(hasEnoughPoints = TRUE, isHomogenous = FALSE, isFiltered = FALSE)
+	attributes(mm)<-c(attributes(mm),list(Area=i), as.list(areas[,i]),tags = tag)
+	return(mm)		
+	}
+
+h_rubitRelativeToAbsolute <- function(m){
+	h <- as.numeric(attributes(m)$H)
+	w <- as.numeric(attributes(m)$W)
+	x0 <- as.numeric(attributes(m)$X)
+	y0 <- as.numeric(attributes(m)$Y)
+	m[,'X'] <- m[,'X']*w + x0
+	m[,'Y'] <- m[,'Y']*h + y0
+	m
+}
+
+rubitCalcDistance <- function(m){
+	
+	if(!any(class(m) == "matrix"))
+		stop(sprintf("The function %s expected argument 'm' to be a matrix. If you have a a list of matrices, use lapply to call this function on each element of the list. See examples for details.",gettext(match.call()[[1]]) ))
+		
+	overwrite <- FALSE
+	if(any(attributes(m)$dimnames[[2]] == "Distance")){
+		overwrite <- TRUE
+		warning("These distances have already been calculated for this data matrix. Overwriting the data.")
+	}
+	
+		
+	if(attributes(m)$tags.hasEnoughPoints){
+		
+		X <- c(m[,'X'],NA)
+		lagX <- c(NA,m[,'X'])
+		Y <- c(m[,'Y'],NA)
+		lagY <- c(NA,m[,'Y'])
+		
+		dX <- X - lagX
+		dY <- Y - lagY
+		
+		D <- sqrt(dX^2 + dY^2)
+		D[length(D)-1] <- D[length(D)]
+		D <- D[-1]
+		if(!overwrite)
+			mm <- cbind(m,Distance = D)
+		else{
+			mm <- m
+			mm[,'Distance'] <- D
+			}
+		
+		atr <-attributes(m)
+		atr$dim <- attributes(mm)$dim
+		atr$dimnames <- attributes(mm)$dimnames
+		attributes(mm) <- atr
+		}
+	else{
+		D<- numeric()
+		if(!overwrite)
+			mm <- cbind(m,Distance = D)
+		else{
+			mm <- m
+			mm[,'Distance'] <- D
+			}
+#~ 		mm <- cbind(m,Distance = D)
+		atr <-attributes(m)
+		atr$dim <- attributes(mm)$dim
+		atr$dimnames <- attributes(mm)$dimnames
+		attributes(mm) <- atr
+	}
+	mm
+}

@@ -1,0 +1,13 @@
+#' @title Raw tracking data from 12 adult weevils.
+#'
+#' @description This data contains the raw tracking data outputted by UbiTrail on Sitona lineatus weevils
+#'
+#' @docType data
+#'
+#' @usage data(weevils)
+#'
+#' @format a list of processed tracking data with each matrix element corresponding to a tracked area
+#'
+#' @source TODO
+#'
+#' @author Quentin Geissmann, 2013

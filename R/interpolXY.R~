@@ -1,0 +1,106 @@
+#' @include filter.R
+NULL
+#' Resample data from an area matrix.
+#' 
+#' This function returns position from reads at a regular time interval.
+#' This is perfomed through linear interpolation.
+#' @param m a numerical matrix corresponding to an area.
+#' @param h the desired resampling frequency in Hz.
+#' @param minRow an integer defining the minimal number of reads. If less than minRow reads are present in m, the function returns an empty matrix.
+#' @return A new area matrix.
+#' @note The new matrix will likely have a different number of rows than the source matrix. 
+#' The attributes of the source matrix are copied to the new matrix.
+#' @examples
+#' data(weevils)
+#' w15 <- lapply(weevils,rubitFilter,k=15)
+#' ##Before resampling
+#' t <- (w15[['08']][,'time'] > 40*1000 & w15[['08']][,'time'] < 80*1000)
+#' plot(w15[['08']][t,'X'] ~ w15[['08']][t,'time'],col='blue',pch='x',cex=0.5)
+#' ##After resampling
+#' w15_intp <- lapply(w15, rubitInterpolate, FPS = 20)
+#' t_intp <- (w15_intp[['08']][,'time'] > 40*1000 & w15_intp[['08']][,'time'] < 80*1000)
+#' points(w15_intp[['08']][t_intp,'X'] ~ w15_intp[['08']][t_intp,'time'],col='red',pch=20,cex=0.5)
+#  ubiMetaData('Results.csv')
+#'
+#' @seealso \code{\link{rubitFilter}} to smooth data before interpolation.
+#' @export
+rubitInterpolate <- function(m, FPS = NA, h = FPS, start_at = NA, end_at = NA, minRow = 11){
+	
+	if(!any(class(m) == "matrix"))
+		stop("This function works with a matrix. If you have a a list of matrices, use lapply to call this function on each element of the list. See examples for details.")
+		
+	if(attributes(m)$tags.isHomogenous)
+		warning("This data matrix has already been resampled.")
+		
+	if(nrow(m) >= minRow & attributes(m)$tags.hasEnoughPoints){
+
+#		#correct time intervals
+# 		time_scalar <- 3.000849
+# 		m[,'time'] = m[,'time'] * time_scalar
+		
+		#change framerate
+		if(FPS != NA){
+			time_scalar <- 1000 / median(diff(m[,"time"])) / FPS
+			m[,"time"] = m[,"time"] * time_scalar
+		}
+		
+		#resample time
+		t0 <- m[1,'time']
+		tf <- m[nrow(m),'time']
+#  		dt <- (tf-t0) / 1000
+# 		n <- h * dt
+		t_out <- seq(from = t0, to = tf, by = 1000 / h)
+		
+		xx <- approx(x=m[,'time'], y=m[,'X'], xout=t_out)$y
+
+		yy <- approx(x=m[,'time'], y=m[,'Y'], xout=t_out)$y
+
+		L <- approx(x=m[,'time'], y=m[,'L'], xout=t_out)$y
+		
+		T <- approx(x=m[,'time'], y=m[,'Territory'], xout=t_out, method='const')$y
+		
+		if(start_at != NA | end_at != NA) {
+			start_at = start_at*60*1000
+			end_at = end_at*60*1000
+			
+			mm <- cbind(T, xx, yy, t_out, L)
+			
+			#trim dataframe
+			mm = subset(mm, mm[,"t_out"] >= start_at & mm[,"t_out"] <= end_at)
+			
+			#build new time intervals at start and end
+			new_times_start <- numeric()
+			new_times_end <- numeric()
+			if(start_at < min(t_out)){
+				new_times_start <- seq(start_at, min(t_out), 1000/FPS)
+			}
+			if(end_at > max(t_out)){
+				new_times_end <- seq(t_out, end_at, 1000/FPS)
+			}
+			#adjust data length to match new timepoints (NA X,Y-position for opening frames; last documented X,Y-position inferred for closing frames)
+			T = c(rep(NA, length(new_times_start)), T, rep(NA, length(new_times_end)))
+			xx = c(rep(NA, length(new_times_start)), xx, rep(xx[length(xx)], length(new_times_end)))
+			yy = c(rep(NA, length(new_times_start)), yy, rep(yy[length(yy)], length(new_times_end)))
+			t_out = c(new_times_start, t_out, new_times_end)
+			L = c(rep(NA, length(new_times_start)), L, rep(NA, length(new_times_end)))
+			
+			mm = cbind(T, xx, yy, t_out, L)
+		
+		} else {
+			mm <- cbind(T, xx, yy, t_out, L)
+		}
+		
+		atr <- attributes(m)
+		atr$dim <- attributes(mm)$dim
+		attributes(mm) <-atr
+		attributes(mm)$tags.hasEnoughPoints <- TRUE
+	
+	} else {
+		mm <- m
+		attributes(mm)$tags.hasEnoughPoints <- FALSE
+	}
+	
+	attributes(mm)$tags.isHomogenous <- TRUE
+	
+	mm
+}

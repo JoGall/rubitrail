@@ -1,0 +1,61 @@
+#' @include utils.R
+#' @include interpolate.R
+#' @include removeOutliers.R
+#' @include medianFilter.R
+NULL
+#' A general function to retrive raw data from a UbiTrail result file.
+#'
+#' This function will load a result file as a list of matrices, before smoothing and resampling to calcuate the distance between successive positions for each area matrix.
+#' 
+#' @param FILE the name of the file which the metadata are to be read from.
+#' @param filterFUN the filter function to be used. It must have the same argument as \code{\link{rubitMedianFilter}}.
+#' @param k the level of smoothing. This argument is passed to the filter function.
+#' @param interpFUN the interpolation function to be used. It must have the same argument as \code{\link{rubitInterpolate}}.
+#' @param h the frequency of resampling, in Hz. This argument is passed to the interpolation function.
+#' @param adj_fps encodes a new framerate, in Hz.
+#' @param start_at,end_at the starting / ending times to interpolate and/or cut data to, in minutes.
+#' @param nmin the minimal number of reads. If not enough reads are presents in an area, an empty matrix is returned.
+#' @param t the threshold used to remove outliers, as a proportion of the overall likelihood distribution; e.g. for t = 0.01, the largest 1\% of outliers will be removed. Missing distances can then be interpolated using the function \code{\link{rubitInterpolate}}.
+#' @param verbose a boolean. If TRUE, the function will print messages at every step.
+#' @note The returned list contains a numerical matrix for each area.
+#' The attributes of list contain metadata and additional information is present in each of the attributes of each matrix.
+#' Each matrix in the list is given attributes about the area it represents.
+#' @return A list of numerical matrices. Each matrix corresponds to an area.
+#' @examples
+#' data(weevils)
+#' ###See general metadata:
+#' attributes(weevils)
+#' ###See how many reads in each area:
+#' summary(weevils)
+#' ###See informations about the area named '08':
+#' attributes(weevils[['08']])
+#' \dontrun{
+#' data2 <- rubitBasic('Results.csv') 
+#' }
+#' @note TODO
+#' @seealso \code{\link{rubitInterpolate}}, \code{\link{rubitMedianFilter}}, and \code{\link{rubitRemoveOutliers}} to understand the different steps of processing.
+#' @export
+rubitBasic <- function(FILE, scale = 1, adj_fps = NA, hz = 30, start_at = NA, end_at = NA, xy_smoothing = 15, outlier_exclusion = 0.001, nmin = xy_smoothing*10, filterFUN = rubitMedianFilter, interpFUN = rubitInterpolate, verbose = FALSE){
+
+	l <- rubitLoadFile(FILE, verbose)
+	
+	atrs <- attributes(l)  #retain meta attributes
+
+	if(t > 0){
+		if(verbose) print(sprintf("Removing outliers..."))
+		l <- lapply(l, rubitRemoveOutliers, t )
+	}
+
+	if(verbose) print(sprintf("Filtering data..."))
+	l <- lapply(l, filterFUN, k = xy_smoothing )
+	
+	if(verbose) print("Interpolating data..")
+	l <- lapply(l, interpFUN, adj_fps = adj_fps, hz = hz, start_at = start_at, end_at = end_at, minRow = nmin )
+	
+	if(verbose) print("Calculating distances...")
+	l <- lapply(l, rubitCalcDistance, scale = scale )
+	
+	attributes(l) <- atrs  #reinstate original attributes
+	
+    return(l)
+}

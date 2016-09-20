@@ -1,0 +1,89 @@
+#' @include utils.R
+#' @include interpolate.R
+#' @include removeOutliers.R
+#' @include medianFilter.R
+#' @include calcVelocity.R
+#' @include calcPosition.R
+#' @include calcTurning.R
+#' @include calcActivity.R
+NULL
+#' A general function to retrive raw data from a UbiTrail result file.
+#'
+#' This function will load a result file as a list of matrices, before smoothing and resampling to calcuate the distance between successive positions for each area matrix.
+#' 
+#' @param FILE a .csv results file outputted by UbiTrail.
+#' @param calib a numeric to calibrate the true spatial scale, in pixels per mm. At the default value, measurements are returned in pixels.
+#' @param xy_smoothing the level of smoothing. This argument is passed to the filter function.
+#' @param h the frequency of resampling, in Hz. This argument is passed to the interpolation function.
+#' @param adj_fps encodes a new framerate, in Hz.
+#' @param start_at,end_at the starting / ending times to interpolate and/or cut data to, in minutes.
+#' @param velocity_smoothing the size of the rolling median window used to smooth speed and acceleration, in frames.
+#' @param turn_resample_rate the number of seconds over which to resample X,Y-coordinate data and calculate turning angle from.
+#' @param activity_window the window size used to define changes in activity, in seconds.
+#' @param activity_min_speed the minimum speed threshold used to define changes in activity below which no movement is inferred, in mm/second.
+#' @param outlier_exclusion the threshold used to remove outliers, as a proportion of the overall likelihood distribution; e.g. for t = 0.01, the largest 1\% of outliers will be removed. Missing distances can then be interpolated using the function \code{\link{rubitInterpolate}}.
+#' @param undistort_a,undistort_b,undistort_c parameters to correct lens distortion.
+#' @param filterFUN the filter function to be used. It must have the same arguments as \code{\link{rubitMedianFilter}}.
+#' @param interpFUN the interpolation function to be used. It must have the same arguments as \code{\link{rubitInterpolate}}.
+#' @param verbose a boolean. If TRUE, the function will print messages at every step.
+#' @note The returned list contains a numerical matrix for each area. The attributes of list contain metadata and additional information is present in each of the attributes of each matrix.
+#' Each matrix in the list is given attributes about the area it represents.
+#' @return A list of numerical matrices. Each matrix corresponds to an area.
+#' @examples
+#' data(weevils)
+#' ###See general metadata:
+#' attributes(weevils)
+#' ###See how many reads in each area:
+#' summary(weevils)
+#' ###See informations about the area named '08':
+#' attributes(weevils[['08']])
+#' \dontrun{
+#' data2 <- rubitMain('Results.csv') 
+#' }
+#' @seealso \code{\link{rubitInterpolate}}, \code{\link{rubitMedianFilter}}, \code{\link{rubitRemoveOutliers}}, \code{\link{rubitCalcVelocity}}, \code{\link{rubitCalcPosition}}, \code{\link{rubitCalcTurning}}, and \code{\link{rubitCalcActivity}} to understand the different steps of processing.
+#' @export
+rubitMain <- function(FILE, calib = 1, h = 30, adj_fps = NA, start_at = NA, end_at = NA, xy_smoothing = 15, outlier_exclusion = 0.001, velocity_smoothing = 19, turn_resample_rate = 1, activity_window = 1, activity_min_speed = 0.1, n_radials = 1, n_slices = 1, thigmo_dist = NA, n_bootstraps = 20, undistort_a = 0, undistort_b = 0, undistort_c = 0, filterFUN = rubitMedianFilter, interpFUN = rubitInterpolate, verbose = FALSE){
+
+	#load raw file
+	l <- rubitLoadFile(FILE, verbose)
+	
+	#retain meta attributes
+	atrs <- attributes(l)  
+
+	#lens correction / undistortion
+	if(undistort_a != 0 | undistort_b != 0 | undistort_c !=0) {
+		l <- lensCorrection(m, undistort_a, undistort_b, undistort_c, imWidth = attributes(l)$Width, imHeight = attributes(l)$Height)
+	}
+	
+	if(outlier_exclusion > 0) {
+		if(verbose) print(sprintf("Removing outliers..."))
+		l <- lapply(l, rubitRemoveOutliers, t = outlier_exclusion )
+	}
+
+	if(verbose) print(sprintf("Filtering data..."))
+	l <- lapply(l, filterFUN, xy_smoothing )
+	
+	if(verbose) print("Interpolating data..")
+	l <- lapply(l, interpFUN, h = h, adj_fps = adj_fps, start_at = start_at, end_at = end_at, minRow = xy_smoothing*10)
+	
+	if(verbose) print("Calculating distances...")
+	l <- lapply(l, rubitCalcDistance, calib = calib )
+	
+	#reinstate orginal meta attributes
+	attributes(l) <- atrs
+
+	if(verbose) print(sprintf("Calculating speeds..."))
+	l <- lapply(l, rubitCalcSpeed, window = velocity_smoothing )
+	
+	if(verbose) print(sprintf("Quantifying thigmotaxis and exploration..."))
+	l <- lapply(l, rubitCalcPosition, n_radials, n_slices, thigmo_dist, calib = calib, n_bootstraps )
+
+	if(verbose) print(sprintf("Resampling and calculating turning angles..."))
+	turning <- lapply(l, rubitCalcTurning, resample = turn_resample_rate )
+
+	if(verbose) print(sprintf("Calculating activity status..."))
+	activity <- lapply(l, rubitCalcActivity, window = activity_window, min_speed = activity_min_speed)
+
+	#return as a list of lists
+    return(list(speeds = l, turning = turning, activity = activity))
+}

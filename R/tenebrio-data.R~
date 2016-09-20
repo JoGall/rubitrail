@@ -1,0 +1,13 @@
+#' @title Processed tracking data from six Tenebrio molitor.
+#'
+#' @description This data contains processed tracking information for six adult mealworm beetles (Tenebrio molitor) in circular areas, as returned by the function \code{\link{rubitBasic}}.
+#'
+#' @docType data
+#'
+#' @usage data(tenebrio)
+#'
+#' @format a list of matrices, with each matrix containing information on X,Y-coordinates, distance travelled and likelihood of position for each timepoint.
+#'
+#' @source TODO
+#'
+#' @author Joe Gallagher, 2014

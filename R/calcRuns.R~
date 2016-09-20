@@ -1,0 +1,70 @@
+calcRuns <- function(m, thresholdDuration = 1, minSpeed = 0.1) {
+#----------------------------------------------------------------
+# Run length encoding calculates raw frequency and duration of mobile phases, where FALSE values are runs below threshold speed (stationary) and TRUE values are above (mobile)
+#----------------------------------------------------------------
+# m = matrix containing speed data
+# minSpeed = user-defined speed below which object is deemed to be stationary
+#----------------------------------------------------------------
+	#change threshold duration from seconds to frames
+	thresholdDuration <- thresholdDuration * calcFPS(m)
+
+	#create empty storage
+	global_df <- matrix(numeric(), ncol=9)
+
+	#make progress bar
+	tmp <- 1
+	pb <- txtProgressBar(min = 0, max = length(unique(m$id)), style = 3)
+
+	#file loop
+	for(i in unique(m$id)) {
+		#calculate raw RLE
+		speeds <- subset(m, m$id == i)
+		speeds$smoothSpeed[is.na(speeds$smoothSpeed)] <- 0
+		raw <- rle(speeds$smoothSpeed >= minSpeed)
+		raw_df <- data.frame(id = rep(i, length(raw$values)), run = raw$lengths, values = raw$values)
+
+		#smooth raw RLE
+		if(nrow(raw_df) > 1 ) {
+			for(j in 2:length(raw_df$run)){
+				if(raw_df$run[j] < thresholdDuration ){
+					raw_df$values[j] <- raw_df$values[j-1]
+				}
+			}
+		}
+		rle_rle <- rle(raw_df$values == TRUE)
+		clusters <- rep(1:length(rle_rle$lengths), rle_rle$lengths)
+		comb <- data.frame(raw_df, clusters)
+		agg <- aggregate(x = comb$run, by = list(comb$values, comb$clusters), FUN = "sum")
+		smooth_df <- data.frame(id = rep(unique(raw_df$id),nrow(agg)), run = agg[,3], values = agg[,1])
+
+		#extract features from RLE
+		cum <- 0
+		for(j in 1:length(smooth_df$run)){
+			#subset each phase
+			ss <- speeds[(cum+1):(cum+smooth_df$run[j]),]
+			#make variables
+			id <- unique(ss$id)
+			run <- smooth_df$run[j]
+			values <- smooth_df$values[j]
+			time_start <- ss$time[1]
+			time_end <- ss$time[nrow(ss)]
+			duration <- time_end - time_start
+			mean_speed <- mean(ss$smoothSpeed)
+			var_speed <- var(ss$smoothSpeed)
+			cum_Distance <- max(cumsum(ss$smoothDistance))
+			modal_position <- Mode(ss$position)
+			
+			#append to global dataframe
+			ss_df <- data.frame(id, run, values, speedMean = mean_speed, speedVar = var_speed, DistanceTotal = cum_Distance, position = modal_position, start = time_start, end = time_end, duration)
+			global_df <- rbind(global_df, ss_df)
+
+			cum <- cum + smooth_df$run[j]
+		}
+		# update progress bar
+		Sys.sleep(0.1)
+   		setTxtProgressBar(pb, tmp)
+   		tmp <- tmp+1
+	}
+	close(pb)
+	return(global_df)
+}
