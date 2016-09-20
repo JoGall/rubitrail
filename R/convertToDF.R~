@@ -10,7 +10,7 @@ NULL
 #' @return A single dataframe for 'basic' input data. A list of three dataframes for 'main' input data, with elements named 'speeds', 'turning' and 'activity'.
 #' @examples
 #' data(tenebrio)
-#' ### 
+#'
 #' rubitDF(tenebrio, "basic")
 #'
 #' rubitDF(tenebrio, "main")

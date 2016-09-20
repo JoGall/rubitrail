@@ -96,15 +96,13 @@ rubitDF <- function(l, type = c("basic", "main")) {
 			ll_turning <- data.frame()
 			ll_activity <- data.frame()
 			
-			#loop for three datasets
-			
 			#loop for list of lists
 			for(j in 1:length(l)) {
 				filename <- attributes(l[[j]][["speeds"]])$filename
 				areas <- names(l[[j]][["speeds"]])
-				ll_speed <- data.frame()
-				ll_turning <- data.frame()
-				ll_activity <- data.frame()
+				l_speed <- data.frame()
+				l_turning <- data.frame()
+				l_activity <- data.frame()
 				
 				for(i in unique(areas)){
 					ss_speed <- as.data.frame(l[[j]][["speeds"]][[i]])

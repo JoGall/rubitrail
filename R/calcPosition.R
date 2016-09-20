@@ -67,15 +67,15 @@ rubitCalcPosition <- function(m, n_radials = 1, n_slices = 1, thigmo_dist = NA, 
 			dist_from_mid <- sqrt((radials[n_radials,]$midX - m[,'X'])^2 + (radials[n_radials,]$midY - m[,'Y'])^2)
 			perimeter_dist <- outer_r - dist_from_mid
 			#discrete thigmotaxis metric: perimeter (1) or centre (0)
-			position <- ifelse(dist_from_mid > inner_r, 1, 0)
+			perimeter <- ifelse(dist_from_mid > inner_r, 1, 0)
 
 			if(!overwrite)
-				mm <- cbind(m, cell, perimeter_dist, position)
+				mm <- cbind(m, cell, perimeter_dist, perimeter)
 			else {
 				mm <- m
 				mm[,'cell'] <- cell
 				mm[,'perimeter_dist'] <- perimeter_dist / scale
-				mm[,'position'] <- position
+				mm[,'perimeter'] <- perimeter
 			}
 			
 			atr <-attributes(m)
@@ -87,14 +87,14 @@ rubitCalcPosition <- function(m, n_radials = 1, n_slices = 1, thigmo_dist = NA, 
 		} else {
 			cell <- numeric()
 			perimeter_dist <- numeric()
-			position <- numeric()
+			perimeter <- numeric()
 			if(!overwrite)
-				mm <- cbind(m, cell, perimeter_dist, position)
+				mm <- cbind(m, cell, perimeter_dist, perimeter)
 			else {
 				mm <- m
 				mm[,'cell'] <- cell
 				mm[,'perimeter_dist'] <- perimeter_dist
-				mm[,'position'] <- position
+				mm[,'perimeter'] <- perimeter
 			}
 			atr <-attributes(m)
 			atr$dim <- attributes(mm)$dim

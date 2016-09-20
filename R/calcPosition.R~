@@ -12,15 +12,14 @@ NULL
 #' @param thigmo_dist the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis), in mm. If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > \eqn{R / sqrt(2)} from the area centre, where \eqn{R} is the radius of the whole area).
 #' @param scale a numeric to calibrate the true spatial scale, in pixels per mm. At the default value, measurements are returned in pixels.
 #' @param n_bootstraps the number of random data samples used to calculate the minimum enclosing circle defining each circular area.
-#' @note TODO
 #' @return The inputted matrix with additional information on position added for each timepoint.
 #' @examples
-#' \dontrun{
 #' data(tenebrio)
+#'
 #' ### Divide circular area into 96 cells, and define thigmotaxis
 #' ### as movement within 2cm of the area perimeter.
 #' sapply(tenebrio, rubitCalcPosition, n_radials = 8, n_slices = 12, thigmo_dist = 20)
-#' }
+#'
 #' @seealso \code{\link{rubitPlotPosition}} to visualise positional information, and \code{\link{rubitMain}} to understand the different steps of processing. This function uses the function \code{getMinCircle()} from the package 'shotGroups' to calculate a minimum enclosing circle for X,Y-coordinates.
 #' @export
 rubitCalcPosition <- function(m, n_radials = 1, n_slices = 1, thigmo_dist = NA, scale = 1, n_bootstraps = 20) {
