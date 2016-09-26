@@ -66,7 +66,7 @@ rubitCalcActivity <- function(m, window = 1, min_speed = 0.1, simple = FALSE) {
 				speed_var <- var(ss[,"speed_smooth"])
 				Distance_sum <- max(cumsum(ss[,"Distance"]))
 				perimeter_dist_mean <- mean(ss[,"perimeter_dist"], na.rm=T)
-				position_mode <- Mode(ss[,"perimeter"])
+				perimeter_mode <- Mode(ss[,"perimeter"])
 				
 				mm <- rbind(mm, cbind(run, values, start = time_start, end = time_end, duration, speed_mean, speed_median, speed_var, Distance_sum, perimeter_dist_mean, perimeter_mode))
 			}
