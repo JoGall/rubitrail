@@ -66,9 +66,9 @@ rubitCalcActivity <- function(m, window = 1, min_speed = 0.1, simple = FALSE) {
 				speed_var <- var(ss[,"speed_smooth"])
 				Distance_sum <- max(cumsum(ss[,"Distance"]))
 				perimeter_dist_mean <- mean(ss[,"perimeter_dist"], na.rm=T)
-				position_mode <- Mode(ss[,"position"])
+				position_mode <- Mode(ss[,"perimeter"])
 				
-				mm <- rbind(mm, cbind(run, values, start = time_start, end = time_end, duration, speed_mean, speed_median, speed_var, Distance_sum, perimeter_dist_mean, position_mode))
+				mm <- rbind(mm, cbind(run, values, start = time_start, end = time_end, duration, speed_mean, speed_median, speed_var, Distance_sum, perimeter_dist_mean, perimeter_mode))
 			}
 			cum <- sum(runs$run[1:j])
 		}
@@ -92,9 +92,9 @@ rubitCalcActivity <- function(m, window = 1, min_speed = 0.1, simple = FALSE) {
 			speed_var <- numeric()
 			Distance_sum <- numeric()
 			perimeter_dist_mean <- numeric()
-			position_mode <- numeric()
+			perimeter_mode <- numeric()
 		
-			mm <- cbind(run, values, start = time_start, end = time_end, duration, speed_mean, speed_median, speed_var, Distance_sum, perimeter_dist_mean, position_mode)
+			mm <- cbind(run, values, start = time_start, end = time_end, duration, speed_mean, speed_median, speed_var, Distance_sum, perimeter_dist_mean, perimeter_mode)
 		}
 		
 		atr$dim <- attributes(mm)$dim
