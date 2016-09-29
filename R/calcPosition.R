@@ -9,8 +9,9 @@ NULL
 #' @param m a matrix containing processed tracking data outputted by \code{\link{rubitBasic}}.
 #' @param n_radials the number of concentric circles to divide a circular area into.
 #' @param n_slices the number of slices to divide a circular area into.
-#' @param thigmo_dist the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis), in mm. If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > \eqn{R / sqrt(2)} from the area centre, where \eqn{R} is the radius of the whole area).
 #' @param scale a numeric to calibrate the true spatial scale, in pixels per mm. At the default value, measurements are returned in pixels.
+#' @param thigmo_dist the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis). If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > \eqn{R / sqrt(2)} from the area centre, where \eqn{R} is the radius of the area). This unit is defined in pixels unless \code{scale} != 1.
+#' @param radius the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{radius} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.
 #' @param n_bootstraps the number of random data samples used to calculate the minimum enclosing circle defining each circular area.
 #' @return The inputted matrix with additional information on position added for each timepoint.
 #' @examples
@@ -22,7 +23,7 @@ NULL
 #'
 #' @seealso \code{\link{rubitPlotPosition}} to visualise positional information, and \code{\link{rubitMain}} to understand the different steps of processing. This function uses the function \code{getMinCircle()} from the package 'shotGroups' to calculate a minimum enclosing circle for X,Y-coordinates.
 #' @export
-rubitCalcPosition <- function(m, n_radials = 1, n_slices = 1, thigmo_dist = NA, scale = 1, n_bootstraps = 20) {
+rubitCalcPosition <- function(m, n_radials = 1, n_slices = 1, scale = 1, thigmo_dist = NA, radius = NA, n_bootstraps = 20) {
 	
 	if(!any(class(m) == "matrix"))
 		stop(sprintf("The function %s expected argument 'm' to be a matrix. If you have a a list of matrices, use lapply to call this function on each element of the list. See examples for details.",gettext(match.call()[[1]]) ))
@@ -36,9 +37,22 @@ rubitCalcPosition <- function(m, n_radials = 1, n_slices = 1, thigmo_dist = NA, 
 		
 		if(attributes(m)$tags.hasEnoughPoints) {
 			
-			##exploration
-			#find minimum enclosing circle
-			radials <- getRadials(m[,'X'], m[,'Y'], n_radials, n_bootstraps)
+			##define area perimeter and get radials
+			#if a minimum radius is defined, use area meta data from attributes to define radials in areas with insufficient movement
+			if(!is.na(radius)) {
+				rad0 <- getMinCircle(na.omit(m[,c("X", "Y")]))$rad
+				if(rad0 * 1.03 < radius) { # account for 3% variation in radius size
+					midX <- attributes(m)$X + (attributes(m)$W / 2)
+					midY <- attributes(m)$Y + (attributes(m)$H / 2)
+					radials <- makeRadials(midX, midY, radius, n_radials)
+				}
+				else
+					radials <- getRadials(m[,'X'], m[,'Y'], n_radials, n_bootstraps)
+			#otherwise calculate radials from X,Y-coords
+			} else	
+				radials <- getRadials(m[,'X'], m[,'Y'], n_radials, n_bootstraps)
+			
+			##cartesian >> polar coords
 			#convert cartesian to polar
 			polarCoords <- cart2polar(m[,'X'], m[,'Y'], radials$midX[1], radials$midY[1])
 			#conform x,y-coordinates to fit inside area dimensions
@@ -49,26 +63,22 @@ rubitCalcPosition <- function(m, n_radials = 1, n_slices = 1, thigmo_dist = NA, 
 			m[,'X'] <- newXY$X
 			m[,'Y'] <- newXY$Y
 			
+			##calculate exploration
 			#calculate cell ID for each x,y point
 			cellID <- getCellID(polarCoords, radials, n_slices)
 			cell <- cellID$cell
 		
-			##thigmotaxis
+			##define thigmotaxis
 			#calculate inner and outer circle radii
 			outer_r <- radials[n_radials,]$rad
 			ifelse(is.na(thigmo_dist), inner_r <- outer_r / sqrt(2), inner_r <- outer_r - (thigmo_dist * scale))
-	#		#scale area perimeters: may be required for area information 
-	#		#derived from image mask
-	#		area_scalar <- 0.93
-	#		outer_r <- outer_r * area_scalar
-	#		inner_r <- outer_r / sqrt(2)
 
 			#continuous thigmotaxis metric: distance from perimeter
 			dist_from_mid <- sqrt((radials[n_radials,]$midX - m[,'X'])^2 + (radials[n_radials,]$midY - m[,'Y'])^2)
 			perimeter_dist <- outer_r - dist_from_mid
+
 			#discrete thigmotaxis metric: perimeter (1) or centre (0)
 			perimeter <- ifelse(dist_from_mid > inner_r, 1, 0)
-
 			if(!overwrite)
 				mm <- cbind(m, cell, perimeter_dist, perimeter)
 			else {
@@ -78,6 +88,8 @@ rubitCalcPosition <- function(m, n_radials = 1, n_slices = 1, thigmo_dist = NA, 
 				mm[,'perimeter'] <- perimeter
 			}
 			
+			
+			##reassign attributes
 			atr <-attributes(m)
 			atr$dim <- attributes(mm)$dim
 			atr$dimnames <- attributes(mm)$dimnames
@@ -85,6 +97,7 @@ rubitCalcPosition <- function(m, n_radials = 1, n_slices = 1, thigmo_dist = NA, 
 			attributes(mm)$tags.isConformed <- TRUE
 			
 		} else {
+			##else if not enough points
 			cell <- numeric()
 			perimeter_dist <- numeric()
 			perimeter <- numeric()
