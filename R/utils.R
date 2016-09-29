@@ -136,20 +136,19 @@ rubitCalcDistance <- function(m, scale = 1){
 	mm
 }
 
-getEnclosingCircle <- function(m) {
+getMinCircle_v <- function(m) {
 	circ <- getMinCircle(m)
 	return(c(circ$ctr, circ$rad))
 }
 
 getRadials <- function(x, y, n_radials, n_bootstraps = 20) {
-
 	#median minimum enclosing circle (MEC)
 	xy <- matrix(c(x, y), ncol=2)
 	xy <- na.omit(xy)
 	ssArr <- replicate(n_bootstraps, xy[sample(nrow(xy), 500, replace=T),], simplify=F)
 	
 	#calculate MEC using smoothed X,Y data
-	circlesXY <- sapply(ssArr, function(x) getEnclosingCircle(x))
+	circlesXY <- sapply(ssArr, function(x) getMinCircle_v(x))
 	midX <- median(circlesXY[1,])
 	midY <- median(circlesXY[2,])
 	#radii of circles
@@ -159,31 +158,50 @@ getRadials <- function(x, y, n_radials, n_bootstraps = 20) {
 		rad_i <- outer_rad * sqrt(i/n_radials)
 		rad <- rbind(rad, rad_i)
 	}
-	
-# 	# calulate MEC using area metadata from mask
-# 	circlesMeta <- sapply(ssArr, function(x) getEnclosingCircle(x))
-# 	midX <- median(circlesMeta[1,])
-# 	midY <- median(circlesMeta[2,])
-# 	radii of circles
-# 	outer_rad <- median(circlesMeta[3,])
-# 	rad <- c()
-# 	for(i in 1:n_radials){
-# 		rad_i <- outer_rad * sqrt(i/n_radials)
-# 		rad <- rbind(rad, rad_i)
-# 	}
 
-	#output
-	r_list <- data.frame(id = 1:n_radials, midX = rep(midX, n_radials), midY = rep(midY, n_radials), rad, row.names=NULL)
-	return(r_list)
+	rads <- data.frame(id = 1:n_radials, midX = rep(midX, n_radials), midY = rep(midY, n_radials), rad, row.names=NULL)
+
+	return(rads)
+}
+
+makeRadials <- function(midX, midY, my_rad, n_radials) {
+	outer_rad <- my_rad
+	rad <- c()
+	for(i in 1:n_radials){
+		rad_i <- outer_rad * sqrt(i/n_radials)
+		rad <- rbind(rad, rad_i)
+	}
+
+	rads <- data.frame(id = 1:n_radials, midX = rep(midX, n_radials), midY = rep(midY, n_radials), rad, row.names=NULL)
+
+	return(rads)
+}
+
+getSlices <- function(n_slices, radii) {
+	angs <- seq(0, 360, 360 / n_slices)
+	
+	df <- sapply(angs, function(x) getCoords(x, max(radii$rad), radii$midX[1], radii$midY[1]))
+	
+	df <- data.frame(matrix(unlist(t(df)), ncol=2))
+	names(df) <- c("x", "y")
+	
+	return(df)
+}
+
+getCoords <- function(a, d, x0, y0) {
+	a <- ifelse(a <= 90, 90 - a, 450 - a)
+	data.frame(x = x0 + d * cos(a / 180 * pi), y = y0 + d * sin(a / 180 * pi))
 }
 
 cart2polar <- function(x, y, midX, midY) {
 	#normalise coordinates relative to centre of circle
 	normX <- x - midX
 	normY <- y - midY
+	
 	#convert to polar coordinates
 	rad <- sqrt(normX^2 + normY^2)
 	theta <- atan2(normY, normX)
+	
 	#convert radians to degrees
 	theta = theta / pi * 180
 	
@@ -193,6 +211,7 @@ cart2polar <- function(x, y, midX, midY) {
 polar2cart <- function(rad, theta, midX, midY){
 	#convert degrees to radians
 	theta = theta * pi / 180
+	
 	#normalise and convert to cartesian coordinates
 	X <- midX + rad * cos(theta)
 	Y <- midY + rad * sin(theta)
@@ -205,26 +224,15 @@ getCellID <- function(polarCoords, radials, n_slices) {
 	slice_breaks <- seq(-180, 180, 360/n_slices)
 	sliceID <- cut(polarCoords$theta, slice_breaks)
 	levels(sliceID) <- c(1:n_slices)
+	
 	#bin by radial
 	radial_breaks <- c(0, radials$rad)
 	radialID <- cut(polarCoords$rad, radial_breaks)
 	levels(radialID) <- c(1:nrow(radials))
+	
 	#generate unique cell ID
 	cellID <- n_slices * (as.numeric(radialID) - 1) + as.numeric(sliceID)
+	
 	#output
 	data.frame(slice = sliceID, radial = radialID, cell = cellID)
-}
-
-getCoords <- function(a, d, x0, y0) {
-  a <- ifelse(a <= 90, 90 - a, 450 - a)
-  data.frame(x = x0 + d * cos(a / 180 * pi), 
-             y = y0 + d * sin(a / 180 * pi))
-}
-
-getSlices <- function(n_slices, radii) {
-	angs <- seq(0, 360, 360 / n_slices)
-	df <- sapply(angs, function(x) getCoords(x, max(radii$rad), radii$midX[1], radii$midY[1]))
-	df <- data.frame(matrix(unlist(t(df)), ncol=2))
-	names(df) <- c("x", "y")
-	return(df)
 }
