@@ -11,7 +11,7 @@ NULL
 #' @param n_slices the number of slices to divide a circular arena into
 #' @param scale a numeric to calibrate the true spatial scale, in pixels per mm. At the default value, measurements are returned in pixels.
 #' @param thigmo_dist the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis). If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > \eqn{R / sqrt(2)} from the area centre, where \eqn{R} is the radius of the area). This unit is defined in pixels unless \code{scale} != 1.
-#' @param radius the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{radius} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.
+#' @param area_rad the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{area_rad} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.
 #' @param n_bootstraps the number of random data samples used to calculate the minimum enclosing circle defining each circular area.
 #' @return a plot of the divided area with the full trajectory overlaid.
 #' @examples
@@ -28,7 +28,7 @@ NULL
 #'
 #' @seealso \code{\link{rubitCalcPosition}} for details on calculating positional information.
 #' @export
-rubitPlotPosition <- function(m, n_radials = 1, n_slices = 1, scale = 1, thigmo_dist = NA, radius = NA, n_bootstraps = 20) {
+rubitPlotPosition <- function(m, n_radials = 1, n_slices = 1, scale = 1, thigmo_dist = NA, area_rad = NA, n_bootstraps = 20) {
 	
 	if(!any(class(m) == "matrix"))
 		stop(sprintf("The function %s expected argument 'm' to be a matrix. If you have a a list of matrices, use lapply to call this function on each element of the list. See examples for details.",gettext(match.call()[[1]]) ))
@@ -37,12 +37,12 @@ rubitPlotPosition <- function(m, n_radials = 1, n_slices = 1, scale = 1, thigmo_
 		
 		##define area perimeter and get radials
 		#if a minimum radius is defined, use area meta data from attributes to define radials in areas with insufficient movement
-		if(!is.na(radius)) {
+		if(!is.na(area_rad)) {
 			rad0 <- getMinCircle(na.omit(m[,c("X", "Y")]))$rad
-			if(rad0 * 1.05 < radius) { # account for 3% variation in radius size
+			if(rad0 * 1.05 < area_rad) { # account for 3% variation in radius size
 				midX <- attributes(m)$X + (attributes(m)$W / 2)
 				midY <- attributes(m)$Y + (attributes(m)$H / 2)
-				radials <- makeRadials(midX, midY, radius, n_radials)
+				radials <- makeRadials(midX, midY, area_rad, n_radials)
 			}
 			else
 				radials <- getRadials(m[,'X'], m[,'Y'], n_radials, n_bootstraps)

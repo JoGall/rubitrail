@@ -5,7 +5,7 @@
 \title{Calculate positional information (e.g. thigmotaxis, exploration) from a circular area.}
 \usage{
 rubitCalcPosition(m, n_radials = 1, n_slices = 1, scale = 1,
-  thigmo_dist = NA, radius = NA, n_bootstraps = 20)
+  thigmo_dist = NA, area_rad = NA, n_bootstraps = 20)
 }
 \arguments{
 \item{m}{a matrix containing processed tracking data outputted by \code{\link{rubitBasic}}.}
@@ -18,7 +18,7 @@ rubitCalcPosition(m, n_radials = 1, n_slices = 1, scale = 1,
 
 \item{thigmo_dist}{the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis). If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > \eqn{R / sqrt(2)} from the area centre, where \eqn{R} is the radius of the area). This unit is defined in pixels unless \code{scale} != 1.}
 
-\item{radius}{the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{radius} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.}
+\item{area_rad}{the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{area_rad} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.}
 
 \item{n_bootstraps}{the number of random data samples used to calculate the minimum enclosing circle defining each circular area.}
 }
