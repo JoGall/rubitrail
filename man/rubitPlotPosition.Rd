@@ -4,26 +4,26 @@
 \alias{rubitPlotPosition}
 \title{Visualise an individual trajectory and positional information in a circular area.}
 \usage{
-rubitPlotPosition(m, n_radials = 1, n_slices = 1, scale = 1,
-  thigmo_dist = NA, area_rad = NA, n_bootstraps = 20)
+rubitPlotPosition(m, scale = 1, area_rad = NA, thigmo_dist = NA,
+  n_radials = 1, n_slices = 1, n_bootstraps = 20)
 }
 \arguments{
-\item{m}{a matrix containing processed tracking data outputted by \code{\link{rubitBasic}}}
+\item{m}{a matrix containing processed tracking data outputted by \code{\link{rubitBasic}}.}
+
+\item{scale}{a numeric to calibrate the true spatial scale, in pixels per mm. If \code{scale} == 1, measurements are returned in pixels. This value should match that used in \code{\link{rubitBasic}}.}
+
+\item{area_rad}{the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{area_rad} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.}
+
+\item{thigmo_dist}{the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis). If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > \eqn{R / sqrt(2)} from the area centre, where \eqn{R} is the radius of the area). This unit is defined in pixels unless \code{scale} != 1.}
 
 \item{n_radials}{the number of concentric circles to divide a circular arena into}
 
 \item{n_slices}{the number of slices to divide a circular arena into}
 
-\item{scale}{a numeric to calibrate the true spatial scale, in pixels per mm. At the default value, measurements are returned in pixels.}
-
-\item{thigmo_dist}{the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis). If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > \eqn{R / sqrt(2)} from the area centre, where \eqn{R} is the radius of the area). This unit is defined in pixels unless \code{scale} != 1.}
-
-\item{area_rad}{the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{area_rad} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.}
-
 \item{n_bootstraps}{the number of random data samples used to calculate the minimum enclosing circle defining each circular area.}
 }
 \value{
-a plot of the divided area with the full trajectory overlaid.
+a plot showing the divided circular area with full trajectory overlaid.
 }
 \description{
 Plots a trajectory over a circular area, dividing the area into a number of grid cells of equal size to visualise exploration, and defining an outer perimeter to visualise thigmotaxis.
@@ -33,14 +33,15 @@ data(tenebrio)
 
 ### Single plot, with area divided into 96 cells
 ### and thigmotaxis defined in outer 20mm of area:
-rubitPlotPosition(tenebrio[['05']], n_radials = 8, n_slices = 12)
+my_scale <- 2.08
+rubitPlotPosition(tenebrio[['05']], scale = my_scale, thigmo_dist = 20, n_radials = 8, n_slices = 12)
 
-### Print plots of matrices in list to PDF:
+### Print plots for all areas in list to PDF:
 #pdf("plots.pdf")
-lapply(tenebrio, rubitPlotPosition, n_radials = 8, n_slices = 12)
+lapply(tenebrio, rubitPlotPosition, scale = my_scale, thigmo_dist = 20, n_radials = 8, n_slices = 12)
 #dev.off()
 }
 \seealso{
-\code{\link{rubitCalcPosition}} for details on calculating positional information.
+\code{\link{rubitCalcPosition}} for more on calculating positional information.
 }
 

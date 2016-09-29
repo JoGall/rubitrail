@@ -4,29 +4,29 @@
 \alias{rubitCalcPosition}
 \title{Calculate positional information (e.g. thigmotaxis, exploration) from a circular area.}
 \usage{
-rubitCalcPosition(m, n_radials = 1, n_slices = 1, scale = 1,
-  thigmo_dist = NA, area_rad = NA, n_bootstraps = 20)
+rubitCalcPosition(m, scale = 1, area_rad = NA, thigmo_dist = NA,
+  n_radials = 1, n_slices = 1, n_bootstraps = 20)
 }
 \arguments{
 \item{m}{a matrix containing processed tracking data outputted by \code{\link{rubitBasic}}.}
+
+\item{scale}{a numeric to calibrate the true spatial scale, in pixels per mm. If \code{scale} == 1, measurements are returned in pixels. This value should match that used in \code{\link{rubitBasic}}.}
+
+\item{area_rad}{the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{area_rad} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.}
+
+\item{thigmo_dist}{the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis). If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > \eqn{R / sqrt(2)} from the area centre, where \eqn{R} is the radius of the area). This unit is defined in pixels unless \code{scale} != 1.}
 
 \item{n_radials}{the number of concentric circles to divide a circular area into.}
 
 \item{n_slices}{the number of slices to divide a circular area into.}
 
-\item{scale}{a numeric to calibrate the true spatial scale, in pixels per mm. At the default value, measurements are returned in pixels.}
-
-\item{thigmo_dist}{the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis). If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > \eqn{R / sqrt(2)} from the area centre, where \eqn{R} is the radius of the area). This unit is defined in pixels unless \code{scale} != 1.}
-
-\item{area_rad}{the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{area_rad} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.}
-
 \item{n_bootstraps}{the number of random data samples used to calculate the minimum enclosing circle defining each circular area.}
 }
 \value{
-The inputted matrix with additional information on position added for each timepoint.
+The input matrix with additional positional information added for each timepoint.
 }
 \description{
-Divides a circular area into a user-defined number of grid cells of equal size in order to quantify exploration (number of unique grid cells visited per unit time). Divides a circular area into inner and outer zones in order to quantify thigmotaxis (movement near the area perimeter).
+Divides a circular area into inner and outer zones in order to quantify thigmotaxis (distance from area perimeter), and divides a circular area into any number of equally-sized grid cells in order to quantify exploration (number of unique area grid cells visited).
 }
 \examples{
 data(tenebrio)
@@ -36,6 +36,6 @@ data(tenebrio)
 sapply(tenebrio, rubitCalcPosition, n_radials = 8, n_slices = 12, thigmo_dist = 20)
 }
 \seealso{
-\code{\link{rubitPlotPosition}} to visualise positional information, and \code{\link{rubitMain}} to understand the different steps of processing. This function uses the function \code{getMinCircle()} from the package 'shotGroups' to calculate a minimum enclosing circle for X,Y-coordinates.
+\code{\link{rubitPlotPosition}} to visualise positional information, and \code{\link{rubitMetrics}} to understand the different steps of processing. This function uses the function \code{getMinCircle()} from the package 'shotGroups' to calculate a minimum enclosing circle for X,Y-coordinates.
 }
 

@@ -1,5 +1,5 @@
 #' @include basic.R
-#' @include main.R
+#' @include metrics.R
 #' @include linearInterpolate.R
 NULL
 #' Calculates the framerate of a time series, in frames per second.
@@ -21,7 +21,7 @@ NULL
 #' ### Modal framerate of all areas combined
 #' calcFPS(weevils)
 #'
-#' @seealso \code{\link{rubitBasic}} and \code{\link{rubitMain}} for information on re-encoding a new framerate into tracking data.
+#' @seealso \code{\link{rubitBasic}} and \code{\link{rubitMetrics}} for information on re-encoding a new framerate into tracking data.
 #' @export
 calcFPS <- function(dat) {
 	ifelse(class(dat) == "list", itv <- Mode(sapply(dat, function(x) median(diff(x[,"time"])))), 	itv <- median(diff(dat[,"time"])) )

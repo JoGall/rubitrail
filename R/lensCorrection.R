@@ -1,4 +1,3 @@
-#' @include main.R
 #' @include utils.R
 NULL
 #' Corrects lens distortion in raw X,Y-coordinates.

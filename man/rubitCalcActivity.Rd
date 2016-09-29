@@ -28,6 +28,6 @@ data(tenebrio)
 sapply(tenebrio, rubitCalcActivity, window = 3, simple = TRUE)
 }
 \seealso{
-\code{\link{rubitMain}} to understand the different steps of processing. This function uses the run length encoding function, \code{rle()}, from base R.
+\code{\link{rubitMetrics}} to understand the different steps of processing. This function uses the run length encoding function, \code{rle()}, from base R.
 }
 

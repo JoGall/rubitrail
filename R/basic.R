@@ -5,15 +5,15 @@
 #' @include removeOutliers.R
 #' @include medianFilter.R
 NULL
-#' Reads a UbiTrail result file and performs basic processing.
+#' Reads a raw UbiTrail result file and returns filtered X,Y-trajectories.
 #'
-#' This function loads a UbiTrail result file as a list of matrices, before smoothing, interpolating and resampling in order to calculate distances between successive positions for each area matrix.
+#' This function loads a UbiTrail result file as a list of matrices. Raw X,Y-trajectories are then smoothed, interpolated, and resampled before the distance between successive positions is calculated.
 #' 
 #' @param FILE a .csv result file outputted by UbiTrail.
 #' @param scale a numeric to calibrate the true spatial scale, in pixels per mm. At the default value, measurements are returned in pixels.
-#' @param adj_fps encodes a new framerate, in Hz.
 #' @param hz the frequency of resampling, in Hz. This argument is passed to the interpolation function.
 #' @param start_at,end_at the desired start and end times to interpolate and/or cut data to, in minutes.
+#' @param adj_fps encodes a new framerate, in Hz.
 #' @param xy_smoothing the level of smoothing for raw trajectories. This argument is passed to the filter function.
 #' @param p the threshold used to remove outliers, as a proportion of the overall likelihood distribution; e.g. for \code{p = 0.01}, the largest 1\% of outliers will be removed. See \code{\link{rubitRemoveOutliers}} for more information.
 #' @param nmin the minimal number of reads. If not enough reads are presents in an area, an empty matrix is returned.
@@ -36,19 +36,18 @@ NULL
 #' # filelist <- list.files()
 #'
 #' ### Read a single results file
-#' rubitBasic(filelist[1], scale= 2.076, adj_fps = 19.05, hz = 20, b = -0.022, verbose = TRUE)
+#' rubitBasic(filelist[1], scale= 2.08, hz = 20, adj_fps = 19.05, b = -0.022, verbose = TRUE)
 #'
 #' ## Apply function over a list of results files:
-#' lapply(filelist, rubitBasic, scale= 2.076, adj_fps = 19.05, hz = 20, b = -0.022, verbose = TRUE)
+#' lapply(filelist, rubitBasic, scale= 2.08, hz = 20, adj_fps = 19.05, b = -0.022, verbose = TRUE)
 #'
-#' @seealso \code{\link{calcFPS}} for calculating the framerate of data, and \code{\link{rubitLinearInterpolate}}, \code{\link{rubitMedianFilter}}, and \code{\link{rubitRemoveOutliers}} to understand the different steps of processing used in this function.
+#' @seealso \code{\link{rubitToDF}} for converting the returned list (or list of lists) to a dataframe for ease of further analysis. See \code{\link{rubitLinearInterpolate}}, \code{\link{rubitMedianFilter}}, and \code{\link{rubitRemoveOutliers}} to understand the different steps of processing used in this function. Also see code{\link{calcFPS}} for calculating the framerate of data and see \code{\link{lensCorrection}} for more information on lens distortion.
 #' @export
-rubitBasic <- function(FILE, scale = 1, adj_fps = NA, hz = 30, start_at = NA, end_at = NA, xy_smoothing = 15, p = 0.001, nmin = xy_smoothing*10, a = 0, b = 0, c = 0, filterFUN = rubitMedianFilter, interpFUN = rubitLinearInterpolate, verbose = FALSE){
+rubitBasic <- function(FILE, scale = 1, hz = 30, start_at = NA, end_at = NA, adj_fps = NA, xy_smoothing = 15, p = 0.001, nmin = xy_smoothing*10, a = 0, b = 0, c = 0, filterFUN = rubitMedianFilter, interpFUN = rubitLinearInterpolate, verbose = FALSE){
 
 	#read data
 	l <- rubitLoadFile(FILE)
-	#original attributes
-	atrs <- attributes(l)
+	atrs <- attributes(l)  #remember original attributes
 	
 	#lens correction
 	imWidth <- as.numeric(attributes(l)$Width)

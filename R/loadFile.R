@@ -1,6 +1,6 @@
 #' @include utils.R
 #' @include basic.R
-#' @include main.R
+#' @include metrics.R
 NULL
 #' Reads raw data from a UbiTrail result file.
 #'
@@ -26,7 +26,7 @@ NULL
 #' ###See informations about the area named '08':
 #' attributes(weevils[['08']])
 #'
-#' @seealso \code{\link{rubitBasic}} and \code{\link{rubitMain}} for more further processing and analysis of tracking data.
+#' @seealso \code{\link{rubitBasic}} and \code{\link{rubitMetrics}} for more further processing and analysis of tracking data.
 #' @export
 rubitLoadFile <- function(FILE, verbose=FALSE){
 	if(verbose) print("Reading data...")

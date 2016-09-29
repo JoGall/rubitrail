@@ -31,6 +31,6 @@ sapply(weevils, calcFPS)
 calcFPS(weevils)
 }
 \seealso{
-\code{\link{rubitBasic}} and \code{\link{rubitMain}} for information on re-encoding a new framerate into tracking data.
+\code{\link{rubitBasic}} and \code{\link{rubitMetrics}} for information on re-encoding a new framerate into tracking data.
 }
 

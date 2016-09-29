@@ -1,5 +1,5 @@
 #' @include utils.R
-#' @include main.R
+#' @include metrics.R
 #' @include basic.R
 NULL
 #' Calculates speed and acceleration from processed tracking data.
@@ -15,7 +15,7 @@ NULL
 #' ### Apply the function over all areas in list
 #' sapply(tenebrio, rubitCalcSpeed, window = 1)
 #'
-#' @seealso \code{\link{rubitMain}} to understand the different steps of processing.
+#' @seealso \code{\link{rubitMetrics}} to understand the different steps of processing.
 #' @export
 rubitCalcSpeed <- function(m, window = 11) {
 	

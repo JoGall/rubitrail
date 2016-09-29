@@ -23,6 +23,6 @@ data(tenebrio)
 sapply(tenebrio, rubitCalcTurning, resample = 1)
 }
 \seealso{
-\code{\link{rubitMain}} to understand the different steps of processing.
+\code{\link{rubitMetrics}} to understand the different steps of processing.
 }
 

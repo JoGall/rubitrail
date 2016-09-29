@@ -37,6 +37,6 @@ summary(weevils)
 attributes(weevils[['08']])
 }
 \seealso{
-\code{\link{rubitBasic}} and \code{\link{rubitMain}} for more further processing and analysis of tracking data.
+\code{\link{rubitBasic}} and \code{\link{rubitMetrics}} for more further processing and analysis of tracking data.
 }
 

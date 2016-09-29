@@ -24,6 +24,6 @@ data(tenebrio)
 sapply(tenebrio, rubitCalcSpeed, window = 1)
 }
 \seealso{
-\code{\link{rubitMain}} to understand the different steps of processing.
+\code{\link{rubitMetrics}} to understand the different steps of processing.
 }
 

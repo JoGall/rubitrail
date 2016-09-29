@@ -1,4 +1,4 @@
-#' @include main.R
+#' @include metrics.R
 #' @include basic.R
 NULL
 #' Calculates the frequency and duration of mobile / stationary phases
@@ -16,7 +16,7 @@ NULL
 #' ### Apply the function over all areas in list
 #' sapply(tenebrio, rubitCalcActivity, window = 3, simple = TRUE)
 #'
-#' @seealso \code{\link{rubitMain}} to understand the different steps of processing. This function uses the run length encoding function, \code{rle()}, from base R.
+#' @seealso \code{\link{rubitMetrics}} to understand the different steps of processing. This function uses the run length encoding function, \code{rle()}, from base R.
 #' @export
 rubitCalcActivity <- function(m, window = 1, min_speed = 0.1, simple = FALSE) {
 	
