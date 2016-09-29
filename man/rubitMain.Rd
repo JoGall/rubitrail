@@ -4,27 +4,28 @@
 \alias{rubitMain}
 \title{A general function to retrive raw data from a UbiTrail result file.}
 \usage{
-rubitMain(FILE, scale = 1, adj_fps = NA, hz = 30, start_at = NA,
-  end_at = NA, xy_smoothing = 15, p = 0.001, speed_smoothing = 19,
+rubitMain(FILE, scale = 1, hz = 30, start_at = NA, end_at = NA,
+  adj_fps = NA, xy_smoothing = 15, p = 0.001, speed_smoothing = 19,
   turn_resample_rate = 1, activity_window = 1, activity_min_speed = 0.1,
-  n_radials = 1, n_slices = 1, thigmo_dist = NA, n_bootstraps = 20,
-  a = 0, b = 0, c = 0, filterFUN = rubitMedianFilter,
-  interpFUN = rubitLinearInterpolate, verbose = FALSE)
+  n_radials = 1, n_slices = 1, area_rad = NA, thigmo_dist = NA,
+  n_bootstraps = 20, a = 0, b = 0, c = 0,
+  filterFUN = rubitMedianFilter, interpFUN = rubitLinearInterpolate,
+  verbose = FALSE)
 }
 \arguments{
 \item{FILE}{a .csv result file outputted by UbiTrail.}
 
 \item{scale}{a numeric to calibrate the true spatial scale, in pixels per mm. At the default value, measurements are returned in pixels.}
 
-\item{adj_fps}{encodes a new framerate, in Hz.}
-
 \item{hz}{the frequency of resampling, in Hz. This argument is passed to the interpolation function.}
 
 \item{start_at,end_at}{the desired start and end times to interpolate and/or cut data to, in minutes.}
 
+\item{adj_fps}{encodes a new framerate, in Hz.}
+
 \item{xy_smoothing}{the level of smoothing for raw trajectories. This argument is passed to the filter function.}
 
-\item{p}{the proportion of least likely x,y-coordinates to remove based on log-likelihood. For example, for \code{p = 0.01}, the least likely 1\% of points will be removed. See \code{\link{rubitRemoveOutliers}} for more information.}
+\item{p}{the proportion of least likely x,y-coordinates to remove based on log-likelihood. For example, for \code{p = 0.01}, the least likely 1\% of points will be removed and interpolated. See \code{\link{rubitRemoveOutliers}} for more information.}
 
 \item{speed_smoothing}{the size of the rolling median window used to smooth speed and acceleration, in frames.}
 
@@ -37,6 +38,8 @@ rubitMain(FILE, scale = 1, adj_fps = NA, hz = 30, start_at = NA,
 \item{n_radials}{the number of concentric circles to divide a circular area into.}
 
 \item{n_slices}{the number of slices to divide a circular area into.}
+
+\item{area_rad}{the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{area_rad} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.}
 
 \item{thigmo_dist}{the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis), in mm. If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > R/sqrt(2) from the area centre, where R is the radius of the whole area).}
 

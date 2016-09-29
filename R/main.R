@@ -14,17 +14,18 @@ NULL
 #' 
 #' @param FILE a .csv result file outputted by UbiTrail.
 #' @param scale a numeric to calibrate the true spatial scale, in pixels per mm. At the default value, measurements are returned in pixels.
-#' @param adj_fps encodes a new framerate, in Hz.
 #' @param hz the frequency of resampling, in Hz. This argument is passed to the interpolation function.
 #' @param start_at,end_at the desired start and end times to interpolate and/or cut data to, in minutes.
+#' @param adj_fps encodes a new framerate, in Hz.
 #' @param xy_smoothing the level of smoothing for raw trajectories. This argument is passed to the filter function.
-#' @param p the proportion of least likely x,y-coordinates to remove based on log-likelihood. For example, for \code{p = 0.01}, the least likely 1\% of points will be removed. See \code{\link{rubitRemoveOutliers}} for more information.
+#' @param p the proportion of least likely x,y-coordinates to remove based on log-likelihood. For example, for \code{p = 0.01}, the least likely 1\% of points will be removed and interpolated. See \code{\link{rubitRemoveOutliers}} for more information.
 #' @param speed_smoothing the size of the rolling median window used to smooth speed and acceleration, in frames.
 #' @param turn_resample_rate the number of seconds over which to resample X,Y-coordinate data and calculate turning angle from.
 #' @param activity_window the window size used to define changes in activity, in seconds.
 #' @param activity_min_speed the minimum speed threshold used to define changes in activity below which no movement is inferred, in mm/second.
 #' @param n_radials the number of concentric circles to divide a circular area into.
 #' @param n_slices the number of slices to divide a circular area into.
+#' @param area_rad the minimum radius of the area. If an area shows insufficient movement to define a minimum enclosing circle of at least this radius, then a new minimum enclosing circle is calculated using \code{area_rad} and area metainformation stored in \code{attributes(m)}. This unit is defined in pixels unless \code{scale} != 1.
 #' @param thigmo_dist the distance from the boundary perimeter defined as being central (i.e. not thigmotaxis), in mm. If thigmo_dist = NA, thigmotaxis is defined as movement in the outer 50\% of the area (i.e. > R/sqrt(2) from the area centre, where R is the radius of the whole area).
 #' @param n_bootstraps the number of random data samples used to calculate the minimum enclosing circle defining each circular area.
 #' @param a,b,c parameters to correct lens distortion. See \code{\link{lensCorrection}} for more information.
@@ -50,7 +51,7 @@ NULL
 #' }
 #' @seealso \code{\link{calcFPS}} for calculating the framerate of data, and \code{\link{rubitBasic}}, \code{\link{rubitCalcSpeed}}, \code{\link{rubitCalcPosition}}, \code{\link{rubitCalcTurning}}, and \code{\link{rubitCalcActivity}} to understand the different steps of processing used in this function.
 #' @export
-rubitMain <- function(FILE, scale = 1, adj_fps = NA, hz = 30, start_at = NA, end_at = NA, xy_smoothing = 15, p = 0.001, speed_smoothing = 19, turn_resample_rate = 1, activity_window = 1, activity_min_speed = 0.1, n_radials = 1, n_slices = 1, thigmo_dist = NA, n_bootstraps = 20, a = 0, b = 0, c = 0, filterFUN = rubitMedianFilter, interpFUN = rubitLinearInterpolate, verbose = FALSE){
+rubitMain <- function(FILE, scale = 1, hz = 30, start_at = NA, end_at = NA, adj_fps = NA, xy_smoothing = 15, p = 0.001, speed_smoothing = 19, turn_resample_rate = 1, activity_window = 1, activity_min_speed = 0.1, n_radials = 1, n_slices = 1, area_rad = NA, thigmo_dist = NA, n_bootstraps = 20, a = 0, b = 0, c = 0, filterFUN = rubitMedianFilter, interpFUN = rubitLinearInterpolate, verbose = FALSE){
 
 	#load raw file
 	l <- rubitLoadFile(FILE)
@@ -68,16 +69,16 @@ rubitMain <- function(FILE, scale = 1, adj_fps = NA, hz = 30, start_at = NA, end
 	}
 
 	if(verbose) print(sprintf("Filtering data..."))
-	l <- lapply(l, filterFUN, xy_smoothing )
+	l <- lapply(l, filterFUN, k = xy_smoothing )
 	
 	if(verbose) print("Interpolating data..")
-	l <- lapply(l, interpFUN, hz = hz, adj_fps = adj_fps, start_at = start_at, end_at = end_at, minRow = xy_smoothing*10)
+	l <- lapply(l, interpFUN, hz = hz, start_at = start_at, end_at = end_at, adj_fps = adj_fps, minRow = xy_smoothing*10)
 	
 	if(verbose) print("Calculating distances...")
 	l <- lapply(l, rubitCalcDistance, scale = scale )
 
 	if(verbose) print(sprintf("Calculating position..."))
-	l <- lapply(l, rubitCalcPosition, n_radials, n_slices, thigmo_dist, scale = scale, n_bootstraps )
+	l <- lapply(l, rubitCalcPosition, n_radials = n_radials, n_slices = n_slices, scale = scale, area_rad = area_rad, thigmo_dist = thigmo_dist, n_bootstraps = n_bootstraps)
 	
 	if(verbose) print(sprintf("Calculating speeds..."))
 	l <- lapply(l, rubitCalcSpeed, window = speed_smoothing )
@@ -91,5 +92,5 @@ rubitMain <- function(FILE, scale = 1, adj_fps = NA, hz = 30, start_at = NA, end
 	attributes(l) <- atrs  #reinstate attributes
 
 	#return three datasets as a list of lists of matrices
-    return(list(speeds = l, turning = turning, activity = activity))
+    return(list(speed = l, turning = turning, activity = activity))
 }
