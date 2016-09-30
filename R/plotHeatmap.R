@@ -18,10 +18,10 @@ NULL
 #' For each area, the kernel estimate density function will use a bandwidth \code{bw = W/h}, 
 #' where \code{W} is the width of the area.
 #' @examples
-#' data(weevils_filtered)
+#' data(tenebrio_basic)
 #'
-#' rubitPlotHeatmap(weevils_filtered)
-#' rubitPlotHeatmap(weevils_filtered, resol=150)
+#' rubitPlotHeatmap(tenebrio_basic)
+#' rubitPlotHeatmap(tenebrio_basic, resol=150)
 #'
 #' @seealso \code{\link{rubitLinearInterpolate}} for interpolating data. \code{MASS::kde2d} is used by this function.
 #' @export

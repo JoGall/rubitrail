@@ -8,10 +8,10 @@ NULL
 #' @param p the proportion of least likely X,Y-coordinates to remove based on log-likelihood. For example, for \code{p = 0.01}, the least likely 1\% of points will be removed.
 #' @return A numerical matrix of the same dimensions as m.
 #' @examples
-#' data(weevils)
+#' data(weevils_raw)
 #'
 #' Remove least likely 0.01\% of points
-#' w_filt <- lapply(weevils, rubitRemoveOutliers, p = 0.001)
+#' w_filt <- lapply(weevils_raw, rubitRemoveOutliers, p = 0.001)
 #'
 #' @seealso \code{\link{rubitLinearInterpolate}} to interpolate X,Y-coordinates after removing outliers.
 #' @export

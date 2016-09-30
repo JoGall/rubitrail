@@ -18,9 +18,9 @@ A new matrix containing information on turning angles for the inputted area.
 Calculates turning angle between successive vectors of movement by resampling data to minimise jitter, returning a matrix containing both absolute and relative angles in degrees.
 }
 \examples{
-data(tenebrio)
+data(tenebrio_basic)
 ### Apply the function over all areas in list
-sapply(tenebrio, rubitCalcTurning, resample = 1)
+sapply(tenebrio_basic, rubitCalcTurning, resample = 1)
 }
 \seealso{
 \code{\link{rubitMetrics}} to understand the different steps of processing.

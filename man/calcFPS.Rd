@@ -19,16 +19,16 @@ Calculates the modal number of frames per second from a matrix, dataframe or lis
 This function is intended for outputs from the 'rubitrail' package.
 }
 \examples{
-data(weevils)
+data(weevils_raw)
 
 ### Framerate of area '08'
-calcFPS(weevils[['08']])
+calcFPS(weevils_raw[['08']])
 
 ### Framerate of each individual area
-sapply(weevils, calcFPS)
+sapply(weevils_raw, calcFPS)
 
 ### Modal framerate of all areas combined
-calcFPS(weevils)
+calcFPS(weevils_raw)
 }
 \seealso{
 \code{\link{rubitBasic}} and \code{\link{rubitMetrics}} for information on re-encoding a new framerate into tracking data.

@@ -29,16 +29,16 @@ a plot showing the divided circular area with full trajectory overlaid.
 Plots a trajectory over a circular area, dividing the area into a number of grid cells of equal size to visualise exploration, and defining an outer perimeter to visualise thigmotaxis.
 }
 \examples{
-data(tenebrio)
+data(tenebrio_basic)
 
 ### Single plot, with area divided into 96 cells
 ### and thigmotaxis defined in outer 20mm of area:
 my_scale <- 2.08
-rubitPlotPosition(tenebrio[['05']], scale = my_scale, thigmo_dist = 20, n_radials = 8, n_slices = 12)
+rubitPlotPosition(tenebrio_basic[['05']], scale = my_scale, thigmo_dist = 20, n_radials = 8, n_slices = 12)
 
 ### Print plots for all areas in list to PDF:
 #pdf("plots.pdf")
-lapply(tenebrio, rubitPlotPosition, scale = my_scale, thigmo_dist = 20, n_radials = 8, n_slices = 12)
+lapply(tenebrio_basic, rubitPlotPosition, scale = my_scale, thigmo_dist = 20, n_radials = 8, n_slices = 12)
 #dev.off()
 }
 \seealso{

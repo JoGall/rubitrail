@@ -10,16 +10,16 @@ NULL
 #' @note This function is intended for outputs from the 'rubitrail' package.
 #' @return a numeric: the calculated framerate, in frames per second. For a single time series, the median framerate is returned; for a list of time series, the mode of individual framerates is returned.
 #' @examples
-#' data(weevils)
+#' data(weevils_raw)
 #'
 #' ### Framerate of area '08'
-#' calcFPS(weevils[['08']])
+#' calcFPS(weevils_raw[['08']])
 #'
 #' ### Framerate of each individual area
-#' sapply(weevils, calcFPS)
+#' sapply(weevils_raw, calcFPS)
 #'
 #' ### Modal framerate of all areas combined
-#' calcFPS(weevils)
+#' calcFPS(weevils_raw)
 #'
 #' @seealso \code{\link{rubitBasic}} and \code{\link{rubitMetrics}} for information on re-encoding a new framerate into tracking data.
 #' @export

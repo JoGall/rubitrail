@@ -39,6 +39,6 @@ Collate:
     'lensCorrection.R'
     'plotHeatmap.R'
     'plotPosition.R'
-    'tenebrio-data.R'
+    'tenebrio_basic-data.R'
     'toDF.R'
-    'weevils-data.R'
+    'weevils_raw-data.R'

@@ -26,8 +26,8 @@ Parameters can be estimated manually using a checkerboard calibration image and 
 See \url{http://www.imagemagick.org/Usage/lens/} for more information on lens correction.
 }
 \examples{
-data(tenebrio)
+data(tenebrio_basic)
 
-tenebrio <- lensCorrection(tenebrio, 640, 480, b = -0.022)
+tenebrio_basic <- lensCorrection(tenebrio_basic, 640, 480, b = -0.022)
 }
 

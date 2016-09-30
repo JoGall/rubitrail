@@ -9,11 +9,9 @@ NULL
 #' @param basic logical defining the type of data contained in \code{LIST}. Use FALSE for metrics data returned by \code{rubitMetrics} and TRUE for basic data returned by \code{\link{rubitBasic}}.
 #' @return A single dataframe for 'basic' input data. A list of three dataframes for 'metrics' input data, with elements named 'speed', 'turning' and 'activity'.
 #' @examples
-#' data(tenebrio)
+#' data(tenebrio_basic)
 #'
-#' rubitToDF(tenebrio, "basic")
-#'
-#' rubitToDF(tenebrio, "metrics")
+#' tenebrio_DF <- rubitToDF(tenebrio_basic, basic=TRUE)
 #'
 #' @seealso \code{\link{rubitBasic}} and \code{\link{rubitMetrics}} for information on processing raw trajectories and extracting metrics.
 #' @export

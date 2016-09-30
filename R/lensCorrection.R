@@ -13,9 +13,9 @@ NULL
 #' See \url{http://www.imagemagick.org/Usage/lens/} for more information on lens correction.
 #' @return The inputted matrix with corrected X,Y-coordinates.
 #' @examples
-#' data(tenebrio)
+#' data(tenebrio_basic)
 #'
-#' tenebrio <- lensCorrection(tenebrio, 640, 480, b = -0.022)
+#' tenebrio_basic <- lensCorrection(tenebrio_basic, 640, 480, b = -0.022)
 #'
 #' @export
 lensCorrection <- function(m, imWidth, imHeight, a = 0, b = 0, c = 0) {

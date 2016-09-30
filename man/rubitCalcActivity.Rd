@@ -22,10 +22,10 @@ A new matrix containing information on runs for the inputted area.
 Defines stationary and mobile phases by determining the number of consecutive timepoints in which movement speeds are below (stationary; FALSE) or above (mobile; TRUE) a speed threshold, \code{min_speed}. The window size, \code{window}, defines the number of consecutive timepoints required to change the activity phase, in seconds.
 }
 \examples{
-data(tenebrio)
+data(tenebrio_basic)
 
 ### Apply the function over all areas in list
-sapply(tenebrio, rubitCalcActivity, window = 3, simple = TRUE)
+sapply(tenebrio_basic, rubitCalcActivity, window = 3, simple = TRUE)
 }
 \seealso{
 \code{\link{rubitMetrics}} to understand the different steps of processing. This function uses the run length encoding function, \code{rle()}, from base R.

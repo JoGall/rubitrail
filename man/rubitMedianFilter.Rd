@@ -18,15 +18,15 @@ A numerical matrix of the same dimension as m.
 This function is used to eliminate outliers from an area matrix.
 }
 \examples{
-data(weevils)
+data(weevils_raw)
 
 ### Apply different 'k' values to a list of area matrices:
-w15 <- lapply(weevils, rubitMedianFilter, k = 15)
-w101 <- lapply(weevils, rubitMedianFilter, k = 101)
+w15 <- lapply(weevils_raw, rubitMedianFilter, k = 15)
+w101 <- lapply(weevils_raw, rubitMedianFilter, k = 101)
 
 ### See impacts of smoothing parameter 'k' on a trajectory:
 ## raw trajectory
-plot(weevils[['08']][1:100,'X'] ~ weevils[['08']][1:100,'Y'], asp=1, type='l')
+plot(weevils_raw[['08']][1:100,'X'] ~ weevils_raw[['08']][1:100,'Y'], asp=1, type='l')
 ## acceptable level of smoothing
 lines(w15[['08']][1:100,'X'] ~ w15[['08']][1:100,'Y'],col='green')
 ## oversmoothed

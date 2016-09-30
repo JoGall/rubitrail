@@ -15,11 +15,11 @@ NULL
 #' @param n_bootstraps the number of random data samples used to calculate the minimum enclosing circle defining each circular area.
 #' @return The input matrix with additional positional information added for each timepoint.
 #' @examples
-#' data(tenebrio)
+#' data(tenebrio_basic)
 #'
 #' ### Divide circular area into 96 cells, and define thigmotaxis
-#' ### as movement within 2cm of the area perimeter.
-#' sapply(tenebrio, rubitCalcPosition, n_radials = 8, n_slices = 12, thigmo_dist = 20)
+#' ### as movement within 20mm of the area perimeter.
+#' sapply(tenebrio_basic, rubitCalcPosition, n_radials = 8, n_slices = 12, thigmo_dist = 20)
 #'
 #' @seealso \code{\link{rubitPlotPosition}} to visualise positional information, and \code{\link{rubitMetrics}} to understand the different steps of processing. This function uses the function \code{getMinCircle()} from the package 'shotGroups' to calculate a minimum enclosing circle for X,Y-coordinates.
 #' @export

@@ -9,10 +9,10 @@ NULL
 #' @param resample the number of seconds over which to resample tracking data and calculate a new trajectory and turning angle from.
 #' @return A new matrix containing information on turning angles for the inputted area.
 #' @examples
-#' data(tenebrio)
+#' data(tenebrio_basic)
 
 #' ### Apply the function over all areas in list
-#' sapply(tenebrio, rubitCalcTurning, resample = 1)
+#' sapply(tenebrio_basic, rubitCalcTurning, resample = 1)
 #'
 #' @seealso \code{\link{rubitMetrics}} to understand the different steps of processing.
 #' @export

@@ -4,7 +4,7 @@
 \alias{rubitCalcSpeed}
 \title{Calculates speed and acceleration from processed tracking data.}
 \usage{
-rubitCalcSpeed(m, window = 11)
+rubitCalcSpeed(m, window = 21)
 }
 \arguments{
 \item{m}{a matrix containing processed tracking data outputted by \code{\link{rubitBasic}}.}
@@ -18,10 +18,10 @@ The inputted matrix with additional information added for speed (in mm/s) and ac
 Calculates raw and and smoothed (using a rolling median) speed and acceleration from smoothed tracking data.
 }
 \examples{
-data(tenebrio)
+data(tenebrio_basic)
 
 ### Apply the function over all areas in list
-sapply(tenebrio, rubitCalcSpeed, window = 1)
+sapply(tenebrio_basic, rubitCalcSpeed, window = 1)
 }
 \seealso{
 \code{\link{rubitMetrics}} to understand the different steps of processing.

@@ -29,11 +29,11 @@ The input matrix with additional positional information added for each timepoint
 Divides a circular area into inner and outer zones in order to quantify thigmotaxis (distance from area perimeter), and divides a circular area into any number of equally-sized grid cells in order to quantify exploration (number of unique area grid cells visited).
 }
 \examples{
-data(tenebrio)
+data(tenebrio_basic)
 
 ### Divide circular area into 96 cells, and define thigmotaxis
-### as movement within 2cm of the area perimeter.
-sapply(tenebrio, rubitCalcPosition, n_radials = 8, n_slices = 12, thigmo_dist = 20)
+### as movement within 20mm of the area perimeter.
+sapply(tenebrio_basic, rubitCalcPosition, n_radials = 8, n_slices = 12, thigmo_dist = 20)
 }
 \seealso{
 \code{\link{rubitPlotPosition}} to visualise positional information, and \code{\link{rubitMetrics}} to understand the different steps of processing. This function uses the function \code{getMinCircle()} from the package 'shotGroups' to calculate a minimum enclosing circle for X,Y-coordinates.

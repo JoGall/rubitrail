@@ -10,14 +10,14 @@ NULL
 #' @param window the size of the rolling median window used to smooth speed and acceleration, in frames.
 #' @return The inputted matrix with additional information added for speed (in mm/s) and acceleration (in mm/s^2).
 #' @examples
-#' data(tenebrio)
+#' data(tenebrio_basic)
 #'
 #' ### Apply the function over all areas in list
-#' sapply(tenebrio, rubitCalcSpeed, window = 1)
+#' sapply(tenebrio_basic, rubitCalcSpeed, window = 1)
 #'
 #' @seealso \code{\link{rubitMetrics}} to understand the different steps of processing.
 #' @export
-rubitCalcSpeed <- function(m, window = 11) {
+rubitCalcSpeed <- function(m, window = 21) {
 	
 	if(!any(class(m) == "matrix"))
 		stop(sprintf("The function %s expected argument 'm' to be a matrix. If you have a a list of matrices, use lapply to call this function on each element of the list. See examples for details.",gettext(match.call()[[1]]) ))

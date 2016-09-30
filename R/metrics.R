@@ -11,7 +11,7 @@ NULL
 #' 
 #' @param LIST a list of matrices containing processed X,Y-trajectories returned from \code{rubitBasic}.
 #' @param scale a numeric to calibrate the true spatial scale, in pixels per mm. At the default value, measurements are returned in pixels.
-#' @param speed_smoothing the size of the rolling median window used to smooth speed and acceleration, in frames.
+#' @param speed_smooth the size of the rolling median window used to smooth speed and acceleration, in frames.
 #' @param turn_resample_rate the number of seconds over which to resample X,Y-coordinate data and calculate turning angle from.
 #' @param activity_window the window size used to define changes in activity, in seconds.
 #' @param activity_min_speed the minimum speed threshold used to define changes in activity below which no movement is inferred, in mm/second.
@@ -25,17 +25,32 @@ NULL
 #' Re-encoding a new framerate with \code{adj_fps} can correct potential errors made during video recording and/or tracking analysis. Check that the value returned by \code{\link{calcFPS}} matches the calculated framerate of the original video (e.g. using the 'ffprobe' function in FFmpeg [\url{https://ffmpeg.org/}].
 #' @return A list of numerical matrices. Each matrix corresponds to an area.
 #' @examples
-#' data(tenebrio)
-#' 
-#' rubitMetrics(tenebrio, scale= 2.08, n_radials = 8, n_slices = 12, area_rad = 90, thigmo_dist = 20, verbose = TRUE)
+#' ### Extract metrics from a single UbiTrail results file:
+#' ###-------------------------------------------------------
+#' ## Locate raw data example included with package
+#' FILE <- system.file("extdata", "tenebrio_ubitrail.csv.gz", package = "rubitrail")
 #'
-#' ### Apply function over list of results files:
+#' ## Basic processing
+#' tenebrio_basic <- rubitBasic(FILE, scale= 2.08, hz = 30, start_at = 0, end_at = 60, adj_fps = 19.05, k = 21, a = -0.005, b = -0.006, verbose = TRUE)
+#' 
+#' ## Extract metrics from processed data
+#' rubitMetrics(tenebrio_basic, scale = 2.08, n_radials = 8, n_slices = 12, area_rad = 90, thigmo_dist = 20, verbose = TRUE)
+#'
+#'
+#' ### Extract metrics from multiple UbiTrail results files:
+#' ###-------------------------------------------------------
+#' ## Create a filelist of all UbiTrail results files in a directory:
 #' #filelist <- list.files()
-#' #lapply(filelist, rubitMetrics, scale= 2.08, n_radials = 8, n_slices = 12, area_rad = 90, thigmo_dist = 20, verbose = TRUE)
+#'
+#' ## Apply basic processing function over filelist
+#' #basic_data <- lapply(filelist, rubitBasic, scale = 2.08, hz = 30, start_at = 0, end_at = 60, verbose = TRUE)
+#'
+#' ## Apply metrics function over processed list of data
+#' #lapply(basic_data, rubitMetrics, scale = 2.08, n_radials = 8, n_slices = 12, area_rad = 90, thigmo_dist = 20, verbose = TRUE)
 #'
 #' @seealso \code{\link{rubitToDF}} for converting the returned lists (or list of lists) to a dataframe for ease of further analysis. See \code{\link{rubitBasic}}, \code{\link{rubitCalcSpeed}}, \code{\link{rubitCalcPosition}}, \code{\link{rubitCalcTurning}}, and \code{\link{rubitCalcActivity}} to understand the different steps of processing used in this function.
 #' @export
-rubitMetrics <- function(LIST, scale = 1, speed_smoothing = 19, turn_resample_rate = 1, activity_window = 1, activity_min_speed = 0.1, n_radials = 1, n_slices = 1, area_rad = NA, thigmo_dist = NA, n_bootstraps = 20, verbose = FALSE){
+rubitMetrics <- function(LIST, scale = 1, speed_smooth = 21, turn_resample_rate = 1, activity_window = 1, activity_min_speed = 0.1, n_radials = 1, n_slices = 1, area_rad = NA, thigmo_dist = NA, n_bootstraps = 20, verbose = FALSE){
 
 	atrs <- attributes(LIST)  #remember original attributes
 
@@ -43,7 +58,7 @@ rubitMetrics <- function(LIST, scale = 1, speed_smoothing = 19, turn_resample_ra
 	l <- lapply(LIST, rubitCalcPosition, scale = scale, area_rad = area_rad, thigmo_dist = thigmo_dist, n_radials = n_radials, n_slices = n_slices, n_bootstraps = n_bootstraps)
 	
 	if(verbose) print(sprintf("Calculating speeds..."))
-	l <- lapply(l, rubitCalcSpeed, window = speed_smoothing )
+	l <- lapply(l, rubitCalcSpeed, window = speed_smooth )
 	
 	if(verbose) print(sprintf("Resampling and calculating turning angles..."))
 	turning <- lapply(l, rubitCalcTurning, resample = turn_resample_rate )

@@ -11,10 +11,10 @@ NULL
 #' @param simple logical; if FALSE, more complex information on average distance, velocity and position is returned for individual runs.
 #' @return A new matrix containing information on runs for the inputted area.
 #' @examples
-#' data(tenebrio)
+#' data(tenebrio_basic)
 #'
 #' ### Apply the function over all areas in list
-#' sapply(tenebrio, rubitCalcActivity, window = 3, simple = TRUE)
+#' sapply(tenebrio_basic, rubitCalcActivity, window = 3, simple = TRUE)
 #'
 #' @seealso \code{\link{rubitMetrics}} to understand the different steps of processing. This function uses the run length encoding function, \code{rle()}, from base R.
 #' @export

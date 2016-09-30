@@ -22,19 +22,19 @@ The returned list contains a numerical matrix for each area.
 The attributes of list contain metadata and additional information is present in each of the attributes of each matrix.
 }
 \examples{
-### Read UbiTrail result file, e.g.:
-rubitLoadFile("Result.csv")
+## Locate raw data example including with package
+FILE <- system.file("extdata", "tenebrio_ubitrail.csv.gz", package = "rubitrail")
 
-data(weevils)
+tenebrio_raw <- rubitLoadFile(FILE)
 
 ###See general metadata:
-attributes(weevils)
+attributes(tenebrio_raw)
 
 ###See how many reads in each area:
-summary(weevils)
+summary(tenebrio_raw)
 
 ###See informations about the area named '08':
-attributes(weevils[['08']])
+attributes(tenebrio_raw[['08']])
 }
 \seealso{
 \code{\link{rubitBasic}} and \code{\link{rubitMetrics}} for more further processing and analysis of tracking data.
