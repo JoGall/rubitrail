@@ -23,17 +23,19 @@ NULL
 #' rubitPlotHeatmap(weevils_filtered)
 #' rubitPlotHeatmap(weevils_filtered, resol=150)
 #'
-#' @seealso \code{\link{rubitLinearInterpolate}} for interpolating data. \code{MASS::kde2d} used by this function.
+#' @seealso \code{\link{rubitLinearInterpolate}} for interpolating data. \code{MASS::kde2d} is used by this function.
 #' @export
 rubitPlotHeatmap <- function(l, refImg=NA, resol = 50, h=10, palet = rubitTransCol(50,0.5) ){
-
-	flag <- FALSE
+	flag <- FALSE  #warning flag
+	
 	atrs <- attributes(l)
 
+	#background: reference image..
 	if(!is.na(refImg)){
 		myImg <- readTiff(refImg, page = 0, reduce = 0)
 		plot(myImg)
 	}
+	#..or area dimensions from metainformation
 	else{
 		plot(x=1,y=1,xlab='x',ylab='y',type='n',
 			ylim=c(0,as.numeric(atrs$Height)),
@@ -51,12 +53,13 @@ rubitPlotHeatmap <- function(l, refImg=NA, resol = 50, h=10, palet = rubitTransC
 		while(flag==FALSE){
 			if(!i_atrs$tags.isHomogenous)
 				warning("This data is not homogenous, you should probably interpolate it first (see ?rubitLinearInterpolate() ).")
-			flag <- TRUE
+			flag <- TRUE  #turn off further warnings
 		}
 		
-		if(!i_atrs$tags.isHomogenous)
-			l[[i]] <- na.omit(l[[i]])
-			
+		#omit NAs
+		l[[i]] <- na.omit(l[[i]])
+		
+		#plot
 		text(x = i_atrs$X, y= i_atrs$Y,label = i)
 		if(nrow(l[[i]])>2){
 			bw = i_atrs$W / h
