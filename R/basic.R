@@ -14,7 +14,7 @@ NULL
 #' @param hz the frequency of resampling, in Hz. This argument is passed to the interpolation function.
 #' @param start_at,end_at the desired start and end times to interpolate and/or cut data to, in minutes.
 #' @param adj_fps encodes a new framerate, in Hz.
-#' @param xy_smoothing the level of smoothing for raw trajectories. This argument is passed to the filter function.
+#' @param k the level of smoothing for raw trajectories. This argument is passed to the filter function.
 #' @param p the threshold used to remove outliers, as a proportion of the overall likelihood distribution; e.g. for \code{p = 0.01}, the largest 1\% of outliers will be removed. See \code{\link{rubitRemoveOutliers}} for more information.
 #' @param nmin the minimal number of reads. If not enough reads are presents in an area, an empty matrix is returned.
 #' @param a,b,c parameters to correct lens distortion. See \code{\link{lensCorrection}} for more information.
@@ -43,7 +43,7 @@ NULL
 #'
 #' @seealso \code{\link{rubitToDF}} for converting the returned list (or list of lists) to a dataframe for ease of further analysis. See \code{\link{rubitLinearInterpolate}}, \code{\link{rubitMedianFilter}}, and \code{\link{rubitRemoveOutliers}} to understand the different steps of processing used in this function. Also see code{\link{calcFPS}} for calculating the framerate of data and see \code{\link{lensCorrection}} for more information on lens distortion.
 #' @export
-rubitBasic <- function(FILE, scale = 1, hz = 30, start_at = NA, end_at = NA, adj_fps = NA, xy_smoothing = 15, p = 0.001, nmin = xy_smoothing*10, a = 0, b = 0, c = 0, filterFUN = rubitMedianFilter, interpFUN = rubitLinearInterpolate, verbose = FALSE){
+rubitBasic <- function(FILE, scale = 1, hz = 30, start_at = NA, end_at = NA, adj_fps = NA, k = 15, p = 0.001, nmin = k*10, a = 0, b = 0, c = 0, filterFUN = rubitMedianFilter, interpFUN = rubitLinearInterpolate, verbose = FALSE){
 
 	#read data
 	l <- rubitLoadFile(FILE)
@@ -60,7 +60,7 @@ rubitBasic <- function(FILE, scale = 1, hz = 30, start_at = NA, end_at = NA, adj
 	}
 
 	if(verbose) print(sprintf("Filtering data..."))
-	l <- lapply(l, filterFUN, k = xy_smoothing )
+	l <- lapply(l, filterFUN, k = k )
 	
 	if(verbose) print("Interpolating data..")
 	l <- lapply(l, interpFUN, adj_fps = adj_fps, hz = hz, start_at = start_at, end_at = end_at, minRow = nmin )

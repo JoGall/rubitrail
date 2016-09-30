@@ -7,7 +7,7 @@ NULL
 #' 
 #' @param LIST a list (single result file) or list of lists (multiple results files) returned by \code{\link{rubitBasic}} or \code{\link{rubitMetrics}}.
 #' @param basic logical defining the type of data contained in \code{LIST}. Use FALSE for metrics data returned by \code{rubitMetrics} and TRUE for basic data returned by \code{\link{rubitBasic}}.
-#' @return A single dataframe for 'basic' input data. A list of three dataframes for 'metrics' input data, with elements named 'speeds', 'turning' and 'activity'.
+#' @return A single dataframe for 'basic' input data. A list of three dataframes for 'metrics' input data, with elements named 'speed', 'turning' and 'activity'.
 #' @examples
 #' data(tenebrio)
 #'
@@ -55,18 +55,18 @@ rubitToDF <- function(LIST, basic = FALSE) {
 		}
 	}
 	
-	#data returned by rubitMetrics  (i.e. three datasets for each area matrix: 'speeds', 'turning' and 'activity')
+	#data returned by rubitMetrics  (i.e. three datasets for each area matrix: 'speed', 'turning' and 'activity')
 	else {
 	
 		# Single list (one result file)
-		if(class(LIST[["speeds"]][[1]]) == "matrix") {
-			filename <- attributes(LIST[["speeds"]])$filename
-			areas <- names(LIST[["speeds"]])
+		if(class(LIST[["speed"]][[1]]) == "matrix") {
+			filename <- attributes(LIST[["speed"]])$filename
+			areas <- names(LIST[["speed"]])
 			
 			#speed data
 			l_speed <- data.frame()
 			for(i in unique(areas)){
-				ss_speed <- as.data.frame(LIST[["speeds"]][[i]])
+				ss_speed <- as.data.frame(LIST[["speed"]][[i]])
 				ss_speed$filename <- rep(filename, nrow(ss_speed))
 				ss_speed$area <- rep(i, nrow(ss_speed))
 				l_speed <- rbind(l_speed, ss_speed)
@@ -91,21 +91,21 @@ rubitToDF <- function(LIST, basic = FALSE) {
 		}
 		
 		# List of lists (multiple results files)
-		if(class(LIST[[1]][["speeds"]][[1]]) == "matrix") {
+		if(class(LIST[[1]][["speed"]][[1]]) == "matrix") {
 			ll_speed <- data.frame()
 			ll_turning <- data.frame()
 			ll_activity <- data.frame()
 			
 			#loop for list of lists
 			for(j in 1:length(LIST)) {
-				filename <- attributes(LIST[[j]][["speeds"]])$filename
-				areas <- names(LIST[[j]][["speeds"]])
+				filename <- attributes(LIST[[j]][["speed"]])$filename
+				areas <- names(LIST[[j]][["speed"]])
 				l_speed <- data.frame()
 				l_turning <- data.frame()
 				l_activity <- data.frame()
 				
 				for(i in unique(areas)){
-					ss_speed <- as.data.frame(LIST[[j]][["speeds"]][[i]])
+					ss_speed <- as.data.frame(LIST[[j]][["speed"]][[i]])
 					ss_speed$filename <- rep(filename, nrow(ss_speed))
 					ss_speed$area <- rep(i, nrow(ss_speed))
 					l_speed <- rbind(l_speed, ss_speed)

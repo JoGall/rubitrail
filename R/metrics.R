@@ -40,7 +40,7 @@ rubitMetrics <- function(LIST, scale = 1, speed_smoothing = 19, turn_resample_ra
 	atrs <- attributes(LIST)  #remember original attributes
 
 	if(verbose) print(sprintf("Calculating position..."))
-	l <- lapply(l, rubitCalcPosition, scale = scale, area_rad = area_rad, thigmo_dist = thigmo_dist, n_radials = n_radials, n_slices = n_slices, n_bootstraps = n_bootstraps)
+	l <- lapply(LIST, rubitCalcPosition, scale = scale, area_rad = area_rad, thigmo_dist = thigmo_dist, n_radials = n_radials, n_slices = n_slices, n_bootstraps = n_bootstraps)
 	
 	if(verbose) print(sprintf("Calculating speeds..."))
 	l <- lapply(l, rubitCalcSpeed, window = speed_smoothing )
