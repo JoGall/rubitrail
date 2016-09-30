@@ -26,7 +26,10 @@ NULL
 #' @seealso \code{\link{rubitLinearInterpolate}} for interpolating data. \code{MASS::kde2d} used by this function.
 #' @export
 rubitPlotHeatmap <- function(l, refImg=NA, resol = 50, h=10, palet = rubitTransCol(50,0.5) ){
+
+	flag <- FALSE
 	atrs <- attributes(l)
+
 	if(!is.na(refImg)){
 		myImg <- readTiff(refImg, page = 0, reduce = 0)
 		plot(myImg)
@@ -45,8 +48,11 @@ rubitPlotHeatmap <- function(l, refImg=NA, resol = 50, h=10, palet = rubitTransC
 	for(i in names(l)){
 		i_atrs <-attributes(l[[i]])
 		
-		if(!i_atrs$tags.isHomogenous)
-			warning("This data is not homogenous, you should probably interpolate it first (see ?rubitLinearInterpolate() ).")
+		while(flag==FALSE){
+			if(!i_atrs$tags.isHomogenous)
+				warning("This data is not homogenous, you should probably interpolate it first (see ?rubitLinearInterpolate() ).")
+			flag <- TRUE
+		}
 		
 		if(!i_atrs$tags.isHomogenous)
 			l[[i]] <- na.omit(l[[i]])
