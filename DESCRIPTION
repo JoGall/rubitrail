@@ -16,7 +16,6 @@ Depends:
     R (>= 2.15.0)
 Imports:
     MASS,
-    shotGroups,
     plotrix
 Suggests:
     rtiff
@@ -30,6 +29,7 @@ Collate:
     'removeOutliers.R'
     'calcTurning.R'
     'calcSpeed.R'
+    'getMinCircle2.R'
     'calcPosition.R'
     'calcActivity.R'
     'metrics.R'
@@ -41,4 +41,4 @@ Collate:
     'plotPosition.R'
     'tenebrio_basic-data.R'
     'toDF.R'
-    'weevils_raw-data.R'
+    'weevils_basic-data.R'

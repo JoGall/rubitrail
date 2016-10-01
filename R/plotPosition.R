@@ -1,6 +1,7 @@
 #' @include calcPosition.R
 #' @include basic.R
 #' @include utils.R
+#' @include getMinCircle2.R
 NULL
 #' Visualise an individual trajectory and positional information in a circular area.
 #'
@@ -39,7 +40,7 @@ rubitPlotPosition <- function(m, scale = 1, area_rad = NA, thigmo_dist = NA, n_r
 		##define area perimeter and get radials
 		#if a minimum radius is defined, use area meta data from attributes to define radials in areas with insufficient movement
 		if(!is.na(area_rad)) {
-			rad0 <- getMinCircle(na.omit(m[,c("X", "Y")]))$rad
+			rad0 <- getMinCircle2(na.omit(m[,c("X", "Y")]))$rad
 			if(rad0*1.03 < area_rad*scale) { # account for 3% variation in radius size
 				midX <- attributes(m)$X + (attributes(m)$W / 2)
 				midY <- attributes(m)$Y + (attributes(m)$H / 2)

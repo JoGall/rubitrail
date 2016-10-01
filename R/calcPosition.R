@@ -1,6 +1,7 @@
 #' @include metrics.R
 #' @include basic.R
 #' @include utils.R
+#' @include getMinCircle2.R
 NULL
 #' Calculate positional information (e.g. thigmotaxis, exploration) from a circular area.
 #'
@@ -21,7 +22,7 @@ NULL
 #' ### as movement within 20mm of the area perimeter.
 #' sapply(tenebrio_basic, rubitCalcPosition, n_radials = 8, n_slices = 12, thigmo_dist = 20)
 #'
-#' @seealso \code{\link{rubitPlotPosition}} to visualise positional information, and \code{\link{rubitMetrics}} to understand the different steps of processing. This function uses the function \code{getMinCircle()} from the package 'shotGroups' to calculate a minimum enclosing circle for X,Y-coordinates.
+#' @seealso \code{\link{rubitPlotPosition}} to visualise positional information, and \code{\link{rubitMetrics}} to understand the different steps of processing.
 #' @export
 rubitCalcPosition <- function(m, scale = 1, area_rad = NA, thigmo_dist = NA, n_radials = 1, n_slices = 1, n_bootstraps = 20) {
 	
@@ -40,7 +41,7 @@ rubitCalcPosition <- function(m, scale = 1, area_rad = NA, thigmo_dist = NA, n_r
 			##define area perimeter and get radials
 			#if a minimum radius is defined, use area meta data from attributes to define radials in areas with insufficient movement
 			if(!is.na(area_rad)) {
-				rad0 <- getMinCircle(na.omit(m[,c("X", "Y")]))$rad
+				rad0 <- getMinCircle2(na.omit(m[,c("X", "Y")]))$rad
 				if(rad0*1.03 < area_rad*scale) { # account for 3% variation in radius size
 					midX <- attributes(m)$X + (attributes(m)$W / 2)
 					midY <- attributes(m)$Y + (attributes(m)$H / 2)

@@ -47,7 +47,7 @@ Re-encoding a new framerate with \code{adj_fps} can correct potential errors mad
 \examples{
 ### Extract metrics from a single UbiTrail results file:
 ###-------------------------------------------------------
-## Locate raw data example including with package
+## Locate raw data example included with package
 FILE <- system.file("extdata", "tenebrio_ubitrail.csv.gz", package = "rubitrail")
 
 ## Basic processing

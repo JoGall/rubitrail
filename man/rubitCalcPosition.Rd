@@ -36,6 +36,6 @@ data(tenebrio_basic)
 sapply(tenebrio_basic, rubitCalcPosition, n_radials = 8, n_slices = 12, thigmo_dist = 20)
 }
 \seealso{
-\code{\link{rubitPlotPosition}} to visualise positional information, and \code{\link{rubitMetrics}} to understand the different steps of processing. This function uses the function \code{getMinCircle()} from the package 'shotGroups' to calculate a minimum enclosing circle for X,Y-coordinates.
+\code{\link{rubitPlotPosition}} to visualise positional information, and \code{\link{rubitMetrics}} to understand the different steps of processing.
 }
 
