@@ -1,7 +1,6 @@
 #' @include calcPosition.R
 #' @include basic.R
 #' @include utils.R
-#' @include getMinCircle2.R
 NULL
 #' Visualise an individual trajectory and positional information in a circular area.
 #'
@@ -35,9 +34,8 @@ rubitPlotPosition <- function(m, scale = 1, area_rad = NA, thigmo_dist = NA, n_r
 	if(!any(class(m) == "matrix"))
 		stop(sprintf("The function %s expected argument 'm' to be a matrix. If you have a a list of matrices, use lapply to call this function on each element of the list. See examples for details.",gettext(match.call()[[1]]) ))
 		
+	##define area dimensions for matrices with tracked movement
 	if(attributes(m)$tags.hasEnoughPoints) {
-		
-		##define area perimeter and get radials
 		#if a minimum radius is defined, use area meta data from attributes to define radials in areas with insufficient movement
 		if(!is.na(area_rad)) {
 			rad0 <- getMinCircle2(na.omit(m[,c("X", "Y")]))$rad
@@ -51,11 +49,23 @@ rubitPlotPosition <- function(m, scale = 1, area_rad = NA, thigmo_dist = NA, n_r
 		#otherwise calculate radials from X,Y-coords
 		} else	
 			radials <- getRadials(m[,'X'], m[,'Y'], n_radials, n_bootstraps)
+	} 
+	##define area dimensions for areas with no tracked movement
+	else {
+		midX <- attributes(m)$X + (attributes(m)$W / 2)
+		midY <- attributes(m)$Y + (attributes(m)$H / 2)
+		if(!is.na(area_rad))
+			radials <- makeRadials(midX, midY, area_rad*scale, n_radials)
+		else {
+			meta_rad <- mean((attributes(m)$W / 2), (attributes(m)$H / 2))
+			radials <- makeRadials(midX, midY, meta_rad, n_radials)
+		}
+	}
+	
+	#get slice coordinates
+	slices <- getSlices(n_slices, radials)
 		
-		#get slice coordinates
-		slices <- getSlices(n_slices, radials)
-		
-		
+	if(attributes(m)$tags.hasEnoughPoints) {
 		##cartesian >> polar coords
 		#convert cartesian coordinates to polar
 		polarCoords <- cart2polar(m[,'X'], m[,'Y'], radials$midX[1], radials$midY[1])
@@ -63,31 +73,31 @@ rubitPlotPosition <- function(m, scale = 1, area_rad = NA, thigmo_dist = NA, n_r
 		polarCoords$rad <- ifelse(polarCoords$rad > max(radials$rad), max(radials$rad), polarCoords$rad)
 		#convert back to cartesian coordinates
 		newXY <- polar2cart(polarCoords$rad, polarCoords$theta, radials$midX[1], radials$midY[1])
-		
-		
-		##plot
-		#perimeter points and blank plot
-		outer_r <- radials[n_radials,]$rad
-		perimeter <- data.frame(X = c(radials$midX - outer_r, radials$midX + outer_r), Y = c(radials$midY - outer_r, radials$midY + outer_r) )
+	}
 	
-		plot(perimeter$X, perimeter$Y, type='n', asp=1, xlab="X", ylab="Y", main = paste0(attributes(m)$filename, "\n", attributes(m)$Area))
-		
-		#draw radials
-		for(i in 1:nrow(radials)){
-			draw.circle(radials$midX[i], radials$midY[i], radials$rad[i], border="gray75", lwd=2)
-		}
-		
-		#draw slices
-		for(i in 1:nrow(slices)){
-			segments(radials$midX[1], radials$midY[1], slices$x[i], slices$y[i], col="gray75", lwd=2)
-		}
-		
-		#draw thigmotaxis line
-		ifelse(is.na(thigmo_dist), inner_r <- outer_r / sqrt(2), inner_r <- outer_r - (thigmo_dist*scale))
-		draw.circle(radials$midX[1], radials$midY[1], inner_r, border="red", lwd=2)
-		
-		#add complete trajectory
+	##plot
+	#perimeter points and blank plot
+	outer_r <- radials[n_radials,]$rad
+	perimeter <- data.frame(X = c(radials$midX - outer_r, radials$midX + outer_r), Y = c(radials$midY - outer_r, radials$midY + outer_r) )
+
+	plot(perimeter$X, perimeter$Y, type='n', asp=1, xlab="X", ylab="Y", main = paste0(attributes(m)$filename, "\n", attributes(m)$Area))
+	
+	#draw radials
+	for(i in 1:nrow(radials)){
+		draw.circle(radials$midX[i], radials$midY[i], radials$rad[i], border="gray75", lwd=2)
+	}
+	
+	#draw slices
+	for(i in 1:nrow(slices)){
+		segments(radials$midX[1], radials$midY[1], slices$x[i], slices$y[i], col="gray75", lwd=2)
+	}
+	
+	#draw thigmotaxis line
+	ifelse(is.na(thigmo_dist), inner_r <- outer_r / sqrt(2), inner_r <- outer_r - (thigmo_dist*scale))
+	draw.circle(radials$midX[1], radials$midY[1], inner_r, border="red", lwd=2)
+	
+	if(attributes(m)$tags.hasEnoughPoints) {
+		#add complete trajectory if tracked movement
 		points(newXY[,"X"], newXY[,"Y"], type='l')
-		
 	}
 }

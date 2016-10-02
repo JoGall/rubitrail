@@ -1,7 +1,6 @@
 #' @include metrics.R
 #' @include basic.R
 #' @include utils.R
-#' @include getMinCircle2.R
 NULL
 #' Calculate positional information (e.g. thigmotaxis, exploration) from a circular area.
 #'

@@ -136,8 +136,8 @@ rubitCalcDistance <- function(m, scale = 1){
 	mm
 }
 
-getMinCircle_v <- function(m) {
-	circ <- getMinCircle(m)
+getMinCircleVector <- function(m) {
+	circ <- getMinCircle2(m)
 	return(c(circ$ctr, circ$rad))
 }
 
@@ -148,7 +148,7 @@ getRadials <- function(x, y, n_radials, n_bootstraps = 20) {
 	ssArr <- replicate(n_bootstraps, xy[sample(nrow(xy), 500, replace=T),], simplify=F)
 	
 	#calculate MEC using smoothed X,Y data
-	circlesXY <- sapply(ssArr, function(x) getMinCircle_v(x))
+	circlesXY <- sapply(ssArr, function(x) getMinCircleVector(x))
 	midX <- median(circlesXY[1,])
 	midY <- median(circlesXY[2,])
 	#radii of circles
@@ -165,7 +165,7 @@ getRadials <- function(x, y, n_radials, n_bootstraps = 20) {
 }
 
 makeRadials <- function(midX, midY, my_rad, n_radials) {
-	outer_rad <- my_rad
+	outer_rad <- my_rad	
 	rad <- c()
 	for(i in 1:n_radials){
 		rad_i <- outer_rad * sqrt(i/n_radials)

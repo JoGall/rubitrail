@@ -1,5 +1,9 @@
-## These functions are taken from:
-## https://github.com/dwoll/RExRepos/blob/master/R/diagBounding.R
+# These functions are sourced from the 'shotGroups()' package:
+# https://github.com/dwoll/shotGroups
+#
+# and example files available here:
+# https://github.com/dwoll/RExRepos/blob/master/R/diagBounding.R
+#==========================================================================
 
 getMinCircle2 <- function(xy) {
     stopifnot(is.matrix(xy), is.numeric(xy), nrow(xy) >= 2, ncol(xy) == 2)
@@ -62,6 +66,23 @@ getMaxRad <- function(xy, S) {
     }
 
     return(which.max(rads))
+}
+
+getMaxPairDist <- function(xy) {
+    stopifnot(is.matrix(xy), is.numeric(xy), ncol(xy) == 2, nrow(xy) >= 2)
+
+    # 2D -> only convex hull is relevant
+    H    <- chull(xy)      # convex hull indices (vertices ordered clockwise)
+    pts  <- xy[H, ]        # points that make up the convex hull
+    N    <- nrow(pts)                      # number of points on hull
+    dMat <- dist(pts, method="euclidean")  # distance matrix
+    idx  <- which.max(as.matrix(dMat))     # maximum distance
+    i    <- (idx-1) %/% N+1                # column -> point 1
+    j    <- (idx-1) %%  N+1                # row    -> point 2
+    mPts <- H[c(i, j)]                     # rows with max distance
+    dst  <- max(dMat)                      # max distance
+
+    return(list(d=dst, idx=mPts))
 }
 
 getCircleFrom3 <- function(xy) {
