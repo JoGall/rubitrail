@@ -30,8 +30,12 @@ rubitStats <- function(dat, n_bins = 1, var_name, means = TRUE, infer_zero_treat
 	}
 	
 	##speed and position metrics
+	#total distance travelled
+	else if(var_name == "distance") {
+		z <- ddply(dat, .(id, treat, time_bin), .fun = function(x) sum(x[,"Distance"], na.rm=T)
+		)
 	#exploration (%age of arena grid cells visited)
-	else if(var_name == "exploration") {
+	} else if(var_name == "exploration") {
 		z <- ddply(dat, .(id, treat, time_bin), .fun = function(x) length(unique(x[,"cell"], na.rm=T)) / n_cells
 		)
 	#thigmotaxis discrete: %age time outer vs. inner arena
@@ -44,7 +48,7 @@ rubitStats <- function(dat, n_bins = 1, var_name, means = TRUE, infer_zero_treat
 		)
 	#turning angle
 	} else if(var_name == "turning") {
-		z <- ddply(ss, .(id, treat, time_bin), .fun = function(x) median(abs(x[,"relAngle"]), na.rm=T)
+		z <- ddply(dat, .(id, treat, time_bin), .fun = function(x) median(abs(x[,"relAngle"]), na.rm=T)
 		)
 	#meander
 	} else if(var_name == "meander") {
