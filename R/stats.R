@@ -1,8 +1,8 @@
 ##calculate statistics: general function
-calcStats <- function(dat, n_bins = 1, var_name, means = TRUE, infer_zero_treatments = NA, n_cells = 96, min_speed = 0.1) {
+rubitStats <- function(dat, n_bins = 1, var_name, means = TRUE, infer_zero_treatments = NA, n_cells = 96, min_speed = 0.1) {
 
 	##determine if overall stats or time series
-	if(var_name == "pause_dur" | var_name == "walk_dur" | var_name == "pauses" | var_name == "stationary")
+	if(var_name == "pause_dur" | var_name == "walk_dur" | var_name == "pauses" | var_name == "time_walking")
 		ifelse(n_bins > 1, dat$time_bin <- cut(cumsum(dat$duration), breaks = n_bins, labels=FALSE), dat$time_bin <- rep(1, nrow(dat)))
 	else
 		ifelse(n_bins > 1, dat$time_bin <- cut(dat$time, breaks = n_bins, labels=FALSE), dat$time_bin <- rep(1, nrow(dat)))
@@ -23,9 +23,9 @@ calcStats <- function(dat, n_bins = 1, var_name, means = TRUE, infer_zero_treatm
 		ss <- subset(dat, values==0)
 		z <- ddply(ss, .(id, treat, time_bin), .fun = function(x) nrow(x)
 		)
-	#time spent stationary
-	} else if(var_name == "stationary") {
-		z <- ddply(dat, .(id, treat, time_bin), .fun = function(x) sum(x[x["values"]==0,][,"duration"]) / sum(x[,"duration"])
+	#proportion of time spent moving
+	} else if(var_name == "time_walking") {
+		z <- ddply(dat, .(id, treat, time_bin), .fun = function(x) sum(x[x["values"]==1,][,"duration"]) / sum(x[,"duration"])
 		)
 	}
 	
@@ -44,8 +44,7 @@ calcStats <- function(dat, n_bins = 1, var_name, means = TRUE, infer_zero_treatm
 		)
 	#turning angle
 	} else if(var_name == "turning") {
-		ss <- subset(dat, Distance > 0)
-		z <- ddply(ss, .(id, treat, time_bin), .fun = function(x) median(abs(x[,"relAngle"]) / x[,"Distance"], na.rm=T)
+		z <- ddply(ss, .(id, treat, time_bin), .fun = function(x) median(abs(x[,"relAngle"]), na.rm=T)
 		)
 	#meander
 	} else if(var_name == "meander") {
