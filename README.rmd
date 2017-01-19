@@ -18,7 +18,7 @@ And further analysis can return data on a range of behavioural metrics, includin
 
 Install the latest version of this package from github:
 
-    ```{r}
+    ```{r }
     require(devtools)
     devtools::install_github("jogall/rubitrail")
     ```
