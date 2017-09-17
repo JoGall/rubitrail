@@ -165,10 +165,9 @@ getRadials <- function(x, y, n_radials, n_bootstraps = 20) {
 }
 
 makeRadials <- function(midX, midY, my_rad, n_radials) {
-	outer_rad <- my_rad	
 	rad <- c()
 	for(i in 1:n_radials){
-		rad_i <- outer_rad * sqrt(i/n_radials)
+		rad_i <- my_rad * sqrt(i / n_radials)
 		rad <- rbind(rad, rad_i)
 	}
 
@@ -193,7 +192,7 @@ getCoords <- function(a, d, x0, y0) {
 	data.frame(x = x0 + d * cos(a / 180 * pi), y = y0 + d * sin(a / 180 * pi))
 }
 
-cart2polar <- function(x, y, midX, midY) {
+cart2polar <- function(x, y, midX, midY, radians = TRUE) {
 	#normalise coordinates relative to centre of circle
 	normX <- x - midX
 	normY <- y - midY
@@ -202,8 +201,10 @@ cart2polar <- function(x, y, midX, midY) {
 	rad <- sqrt(normX^2 + normY^2)
 	theta <- atan2(normY, normX)
 	
-	#convert radians to degrees
-	theta = theta / pi * 180
+	if(radians == FALSE) {
+    #convert radians to degrees
+    theta = theta / pi * 180
+	}
 	
 	return(data.frame(rad, theta))
 }

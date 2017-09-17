@@ -13,32 +13,40 @@ Description: This package provides tools to read, analyse and represent output
     complete toolkit to quantify single animal motion in arenas. Please visit
     the website for complete documentation and tutorials.
 Depends:
-    R (>= 2.15.0)
+    R (>= 3.2.5)
 Imports:
     MASS,
-    plotrix
+    plotrix,
+    plyr
 Suggests:
-    rtiff
+    rtiff,
+    knitr,
+    rmarkdown
 LazyLoad: TRUE
 License: GPL (>=3.0)
 URL: http://ubitrail.sourceforge.net/
 Collate:
-    'utils.R'
+    'addFactor.R'
     'linearInterpolate.R'
+    'utils.R'
     'medianFilter.R'
     'removeOutliers.R'
-    'calcTurning.R'
-    'calcSpeed.R'
-    'calcPosition.R'
     'calcActivity.R'
+    'calcTurning.R'
+    'calcPosition.R'
+    'calcSpeed.R'
     'metrics.R'
-    'loadFile.R'
     'calcFPS.R'
+    'loadFile.R'
     'basic.R'
     'getMinCircle2.R'
+    'getNullAreas.R'
     'lensCorrection.R'
     'plotHeatmap.R'
     'plotPosition.R'
+    'stats.R'
     'tenebrio_basic-data.R'
     'toDF.R'
     'weevils_basic-data.R'
+RoxygenNote: 6.0.1
+VignetteBuilder: knitr

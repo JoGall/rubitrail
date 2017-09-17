@@ -1,5 +1,5 @@
 ##calculate statistics: general function
-rubitStats <- function(dat, n_bins = 1, var_name, means = TRUE, infer_zero_treatments = NA, n_cells = 96, min_speed = 0.1) {
+rubitStats <- function(dat, n_bins = 1, var_name, means = TRUE, infer_zero_treatments = NA, sub_bins = n_bins, n_cells = 96, min_speed = 0.1) {
 
 	##determine if overall stats or time series
 	if(var_name == "pause_dur" | var_name == "walk_dur" | var_name == "pauses" | var_name == "time_walking")
@@ -34,10 +34,48 @@ rubitStats <- function(dat, n_bins = 1, var_name, means = TRUE, infer_zero_treat
 	else if(var_name == "distance") {
 		z <- ddply(dat, .(id, treat, time_bin), .fun = function(x) sum(x[,"Distance"], na.rm=T)
 		)
-	#exploration (%age of arena grid cells visited)
-	} else if(var_name == "exploration") {
+	#total exploration
+	} else if(var_name == "explor") {
 		z <- ddply(dat, .(id, treat, time_bin), .fun = function(x) length(unique(x[,"cell"], na.rm=T)) / n_cells
 		)
+	#total exploration (measured every minute)
+	} else if(var_name == "explor_per_min") {
+		ss <- dat
+		mins <- ceiling(max(ss$time) / 1000 / 60)
+		#first time bin (per minute)
+		ss$time_bin_1 <- cut(ss$time, breaks = mins, labels=FALSE)
+		z <- ddply(ss, .(id, treat, time_bin_1), .fun = function(x) length(unique(x[,"cell"], na.rm=T)) / n_cells
+		)
+		#second time bins (per x minutes)
+		ifelse(n_bins > 1, z$time_bin_2 <- cut(z$time_bin_1, breaks = n_bins, include.lowest=T), z$time_bin_2 <- rep(1, nrow(z)) )
+		z <- ddply(z, .(id, treat, time_bin_2), .fun = function(x) median(x[,"V1"], na.rm=T)
+		)
+		#convert time_bin_2 factor levels to integer factor (i.e. 1:n_bins)
+		levels(z$time_bin_2) <- 1:length(levels(z$time_bin_2))
+		z$time_bin_2 <- as.integer(z$time_bin_2)
+		names(z)[3] <- "time_bin"
+	#exploration per distance travelled
+	} else if(var_name == "explor_per_dist") {
+		ss <- subset(dat, Distance > 0.1)
+		z <- ddply(ss, .(id, treat, time_bin), .fun = function(x) length(unique(x[,"cell"], na.rm=T)) / n_cells / sum(x[,"Distance"], na.rm=T)
+		)
+	#exploration per distance travelled (measured every minute)
+	} else if(var_name == "explor_per_min_per_dist") {
+		ss <- dat
+		mins <- ceiling(max(ss$time) / 1000 / 60)
+		#first time bin (per minute)
+		ss$time_bin_1 <- cut(ss$time, breaks = mins, labels=FALSE)
+		ss <- subset(ss, Distance > 0.1)
+		z <- ddply(ss, .(id, treat, time_bin_1), .fun = function(x) length(unique(x[,"cell"], na.rm=T)) / n_cells / sum(x[,"Distance"], na.rm=T)
+		)
+		#second time bins (per x minutes)
+		ifelse(n_bins > 1, z$time_bin_2 <- cut(z$time_bin_1, breaks = n_bins, include.lowest=T), z$time_bin_2 <- rep(1, nrow(z)) )
+		z <- ddply(z, .(id, treat, time_bin_2), .fun = function(x) median(x[,"V1"], na.rm=T)
+		)
+		#convert time_bin_2 factor levels to integer factor (i.e. 1:n_bins)
+		levels(z$time_bin_2) <- 1:length(levels(z$time_bin_2))
+		z$time_bin_2 <- as.integer(z$time_bin_2)
+		names(z)[3] <- "time_bin"
 	#thigmotaxis discrete: %age time outer vs. inner arena
 	} else if(var_name == "perimeter") {
 		z <- ddply(dat, .(id, treat, time_bin), .fun = function(x) median(length(na.omit(x[,var_name][x[,var_name]==1])) / length(na.omit(x[,var_name])), na.rm=T)
@@ -52,9 +90,26 @@ rubitStats <- function(dat, n_bins = 1, var_name, means = TRUE, infer_zero_treat
 		)
 	#meander
 	} else if(var_name == "meander") {
-		ss <- subset(dat, Distance > 0)
+		ss <- subset(dat, Distance > 0.1)
 		z <- ddply(ss, .(id, treat, time_bin), .fun = function(x) median(abs(x[,"relAngle"]) / x[,"Distance"], na.rm=T)
 		)
+	#meander per minute
+	} else if(var_name == "meander_per_min") {
+		ss <- dat
+		mins <- ceiling(max(ss$time) / 1000 / 60)
+		#first time bin (per minute)
+		ss$time_bin_1 <- cut(ss$time, breaks = mins, labels=FALSE)
+		ss <- subset(ss, Distance > 0.1)
+		z <- ddply(ss, .(id, treat, time_bin_1), .fun = function(x) median(abs(x[,"relAngle"]) / x[,"Distance"], na.rm=T)
+		)
+		#second time bins (per x minutes)
+		ifelse(n_bins > 1, z$time_bin_2 <- cut(z$time_bin_1, breaks = n_bins, include.lowest=T), z$time_bin_2 <- rep(1, nrow(z)) )
+		z <- ddply(z, .(id, treat, time_bin_2), .fun = function(x) median(x[,"V1"], na.rm=T)
+		)
+		#convert time_bin_2 factor levels to integer factor (i.e. 1:n_bins)
+		levels(z$time_bin_2) <- 1:length(levels(z$time_bin_2))
+		z$time_bin_2 <- as.integer(z$time_bin_2)
+		names(z)[3] <- "time_bin"
 	#turnarounds 
 	} else if(var_name == "turnarounds") {
 		ss <- na.omit(subset(dat, sqrt(relAngle^2) > 165))
