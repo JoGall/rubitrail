@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #RUbitrail
+=======
+# RUbitrail
+>>>>>>> cd9672bc48395918289b8872af89e6d1778de3e3
 
 An R package to analyse the output of [Ubitrail](http://ubitrail.sourceforge.net/), an open-source software for tracking animal locomotion. Together, these aim to provide a complete toolkit for quantifying two-dimensional locomotory behaviours in animals. Documentation and tutorials on using the software are available [here](http://ubitrail.sourceforge.net/).
 
